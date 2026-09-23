@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel de Monitoramento</title>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255,255,255,0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-blue: #38bdf8;
+      --green: #22c55e;
+      --red: #ef4444;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body {
+      background: var(--bg-primary);
+      background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-primary) 70%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* ===== TELA DE LOGIN ===== */
+    .login-tela {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+    .login-card {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+    }
+    .login-card h1 {
+      text-align: center;
+      color: var(--accent-blue);
+      margin-bottom: 2rem;
+      font-size: 1.5rem;
+    }
+    .form-grupo {
+      margin-bottom: 1.25rem;
+    }
+    .form-grupo label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .form-grupo input {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(15,23,42,0.6);
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-grupo input:focus {
+      border-color: var(--accent-blue);
+    }
+    .btn-login {
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent-blue);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-login:hover { opacity: 0.9; }
+    .erro-login {
+      color: var(--red);
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    /* ===== TELA PRINCIPAL ===== */
+    .principal { display: none; padding: 2.5rem 1.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; width: 100%; }
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2.5rem; padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    h1 { font-size: 1.8rem; color: var(--accent-blue); }
+    .btn-sair {
+      padding: 0.5rem 1rem; border-radius: 8px; border: none;
+      background: rgba(239,68,68,0.2); color: #fca5a5;
+      cursor: pointer; font-weight: 600;
+    }
+    h2 {
+      margin: 2rem 0 1rem; color: var(--text-muted);
+      font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1.5px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+    .card {
+      background: var(--bg-card); backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color); border-radius: 16px;
+      padding: 1.5rem; transition: transform 0.2s;
+    }
+    .card:hover { transform: translateY(-3px); }
+    .card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .val { font-size: 2rem; font-weight: 700; }
+    .sub-val { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 1rem; overflow: hidden; }
+    .bar>div { height: 100%; border-radius: 3px; transition: width 0.6s; }
+    .green { background: var(--green); box-shadow: 0 0 10px rgba(34,197,94,0.4); }
+    .yellow { background: #eab308; }
+    .red { background: var(--red); box-shadow: 0 0 10px rgba(239,68,68,0.4); }
+    .status-list { display: grid; gap: 1rem; margin-top: 0.5rem; }
+    .item {
+      background: var(--bg-card); border: 1px solid var(--border-color);
+      border-radius: 12px; padding: 1rem 1.25rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.6rem; }
+    .on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .off { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .actions { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn {
+      padding: 0.75rem 1.25rem; border-radius: 10px;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none;
+    }
+    .btn-liga { background: var(--green); color: white; }
+    .btn-desliga { background: var(--red); color: white; }
+    .btn-link { background: #1e3a8a; color: #93c5fd; text-decoration: none; display: none; }
+    .footer {
+      margin-top: 3rem; padding-top: 1.25rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.8rem; color: var(--text-muted);
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div class="login-tela" id="telaLogin">
+    <div class="login-card">
+      <h1>🔐 Acesso Restrito</h1>
+      <form id="formLogin">
+        <div class="form-grupo">
+          <label for="usuario">Usuário</label>
+          <input type="text" id="usuario" required autocomplete="username">
+        </div>
+        <div class="form-grupo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn-login">Entrar</button>
+        <div class="erro-login" id="erroLogin">Usuário ou senha incorretos</div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TELA PRINCIPAL -->
+  <div class="principal" id="telaPrincipal">
+    <div class="container">
+      <header>
+        <h1>📊 Painel de Monitoramento</h1>
+        <button class="btn-sair" id="btnSair">Sair</button>
+      </header>
+
+      <h2>⚙️ Recursos do Sistema</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>CPU</h3>
+          <div class="val" id="cpu">--</div>
+          <div class="bar"><div id="bcpu"></div></div>
+        </div>
+        <div class="card">
+          <h3>Memória RAM</h3>
+          <div class="val" id="ram">--</div>
+          <div class="sub-val" id="ramd"></div>
+          <div class="bar"><div id="bram"></div></div>
+        </div>
+        <div class="card">
+          <h3>Disco Principal</h3>
+          <div class="val" id="dsc">--</div>
+          <div class="sub-val" id="dscd"></div>
+          <div class="bar"><div id="bdsc"></div></div>
+        </div>
+        <div class="card">
+          <h3>Tempo Ativo</h3>
+          <div class="val" id="ativo" style="font-size: 1.8rem;">--</div>
+          <div class="sub-val">Sistema Operacional</div>
+        </div>
+      </div>
+
+      <h2>🐘 PostgreSQL</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="card">
+          <h3>Tamanho Total dos Bancos</h3>
+          <div class="val" id="pgtotal" style="font-size: 1.5rem;">--</div>
+        </div>
+        <div class="card">
+          <h3>Conexões Ativas</h3>
+          <div class="val" id="pgcon" style="font-size: 1.5rem;">--</div>
+        </div>
+      </div>
+
+      <h2>📦 Serviços Docker</h2>
+      <div class="status-list" id="dock">
+        <div class="card" style="text-align: center; color: var(--text-muted);">Carregando...</div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-liga" id="btnPgAdmin" onclick="togglePgAdmin()">Carregando...</button>
+        <a href="https://admin.gomesdev87.tech" target="_blank" class="btn btn-link" id="linkPgAdmin">🐘 Abrir pgAdmin</a>
+      </div>
+
+      <div class="footer">
+        <span id="at">Atualizado: --</span>
+        <span>Atualização automática a cada 10s</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = localStorage.getItem('painel_token');
+
+    // ===== UTILITÁRIAS =====
+    function cor(p) {
+      return p > 80 ? 'red' : p > 60 ? 'yellow' : 'green';
+    }
+    function headers() {
+      return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+    }
+    function sair() {
+      localStorage.removeItem('painel_token');
+      token = null;
+      document.getElementById('telaLogin').style.display = 'flex';
+      document.getElementById('telaPrincipal').style.display = 'none';
+    }
+
+    // ===== LOGIN =====
+    document.getElementById('formLogin').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      const senha = document.getElementById('senha').value;
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha })
+      });
+      const dados = await res.json();
+      if (dados.sucesso) {
+        token = dados.token;
+        localStorage.setItem('painel_token', token);
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaPrincipal').style.display = 'block';
+        carregar();
+      } else {
+        document.getElementById('erroLogin').style.display = 'block';
+      }
+    });
+
+    // ===== PGADMIN =====
+    async function checarPgAdmin() {
+      const res = await fetch('/api/pgadmin/status', { headers: headers() });
+      const dados = await res.json();
+      const btn = document.getElementById('btnPgAdmin');
+      const link = document.getElementById('linkPgAdmin');
+      if (dados.running) {
+        btn.textContent = '🛑 Desligar pgAdmin';
+        btn.className = 'btn btn-desliga';
+        link.style.display = 'inline-block';
+      } else {
+        btn.textContent = '⚡ Ligar pgAdmin';
+        btn.className = 'btn btn-liga';
+        link.style.display = 'none';
+      }
+    }
+    async function togglePgAdmin() {
+      const res = await fetch('/api/pgadmin/status', { headers: headers() });
+      const dados = await res.json();
+      const rota = dados.running ? '/api/pgadmin/stop' : '/api/pgadmin/start';
+      await fetch(rota, { method: 'POST', headers: headers() });
+      setTimeout(checarPgAdmin, 2000);
+    }
+
+    // ===== CARREGAR DADOS =====
+    async function carregar() {
+      if (!token) return;
+
+      // Consumo
+      try {
+        const c = await (await fetch('/api/consumo', { headers: headers() })).json();
+        if (c.erro) return sair();
+        document.getElementById('cpu').textContent = c.cpu + '%';
+        document.getElementById('bcpu').style.width = c.cpu + '%';
+        document.getElementById('bcpu').className = cor(parseFloat(c.cpu));
+        document.getElementById('ram').textContent = c.ramUsada + '%';
+        document.getElementById('ramd').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
+        document.getElementById('bram').style.width = c.ramUsada + '%';
+        document.getElementById('bram').className = cor(parseFloat(c.ramUsada));
+        document.getElementById('dsc').textContent = c.discoUsado + '%';
+        document.getElementById('dscd').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
+        document.getElementById('bdsc').style.width = c.discoUsado + '%';
+        document.getElementById('bdsc').className = cor(parseFloat(c.discoUsado));
+        document.getElementById('ativo').textContent = c.tempoAtivoSistema + 'h';
+      } catch { return sair(); }
+
+      // PostgreSQL
+      try {
+        const pg = await (await fetch('/api/pg/geral', { headers: headers() })).json();
+        document.getElementById('pgtotal').textContent = pg.total || '--';
+        document.getElementById('pgcon').textContent = pg.conexoes || '--';
+      } catch {
+        document.getElementById('pgtotal').textContent = 'Indisponível';
+        document.getElementById('pgcon').textContent = '--';
+      }
+
+      // Docker
+      try {
+        const dk = await (await fetch('/api/docker', { headers: headers() })).json();
+        const el = document.getElementById('dock');
+        if (!dk || dk.length === 0) {
+          el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);">Nenhum container encontrado</div>';
+        } else {
+          el.innerHTML = dk.map(s => {
+            const on = s.State?.toLowerCase().includes('running');
+            return `<div class="item">
+              <span><span class="dot ${on ? 'on' : 'off'}"></span>${s.Name}</span>
+              <span style="color:${on ? 'var(--green)' : 'var(--red)'}">${on ? '✅ Ativo' : '❌ Parado'}</span>
+            </div>`;
+          }).join('');
+        }
+      } catch {
+        document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
+      }
+
+      document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+      checarPgAdmin();
+    }
+
+    // ===== INICIALIZAÇÃO =====
+    document.getElementById('btnSair').addEventListener('click', sair);
+    if (token) {
+      document.getElementById('telaLogin').style.display = 'none';
+      document.getElementById('telaPrincipal').style.display = 'block';
+      carregar();
+    }
+    setInterval(carregar, 10000);
+  </script>
+</body>
+</html>

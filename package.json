@@ -1,0 +1,17 @@
+{
+  "name": "painel-servidor",
+  "version": "1.0.0",
+  "dependencies": {
+    "basic-auth": "^3.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.3",
+    "express": "^4.22.3",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0",
+    "pm2": "^7.0.4",
+    "systeminformation": "^5.33.13"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}
