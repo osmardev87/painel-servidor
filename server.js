@@ -18,8 +18,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'chave_secreta_mude_isso!@#';
 // ========== MIDDLEWARES ==========
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
-
-// Serve o index.html na raiz — funciona com qualquer configuração do Nginx
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ========== BANCO DE DADOS ==========
@@ -51,7 +49,7 @@ function verificarToken(req, res, next) {
   }
 }
 
-// ========== ROTA DE LOGIN — SEMPRE ACESSÍVEL ==========
+// ========== ROTA DE LOGIN ==========
 app.post('/api/login', (req, res) => {
   console.log('📨 Requisição de login recebida');
   const { usuario, senha } = req.body;
@@ -59,7 +57,6 @@ app.post('/api/login', (req, res) => {
   if (!usuario || !senha) {
     return res.status(400).json({ sucesso: false, mensagem: 'Usuário e senha obrigatórios' });
   }
-
   if (usuario === AUTH_USER && senha === AUTH_PASS) {
     const token = jwt.sign({ usuario }, JWT_SECRET, { expiresIn: '8h' });
     console.log('✅ Login bem-sucedido:', usuario);
@@ -75,7 +72,9 @@ app.use('/api/consumo', verificarToken);
 app.use('/api/pg', verificarToken);
 app.use('/api/docker', verificarToken);
 app.use('/api/pgadmin', verificarToken);
+app.use('/api/controle-semanal', verificarToken);
 
+// ===== CONSUMO DO SISTEMA =====
 app.get('/api/consumo', async (req, res) => {
   try {
     const [cpu, mem, disco] = await Promise.all([si.currentLoad(), si.mem(), si.fsSize()]);
@@ -96,6 +95,7 @@ app.get('/api/consumo', async (req, res) => {
   }
 });
 
+// ===== POSTGRESQL =====
 app.get('/api/pg/geral', async (req, res) => {
   try {
     const client = await pool.connect();
@@ -113,6 +113,7 @@ app.get('/api/pg/geral', async (req, res) => {
   }
 });
 
+// ===== DOCKER =====
 app.get('/api/docker', (req, res) => {
   const composePath = process.env.DOCKER_COMPOSE_PATH || '/root/DB';
   exec(`cd ${composePath} && docker compose ps --format json 2>/dev/null`, (err, stdout) => {
@@ -142,6 +143,7 @@ app.get('/api/docker', (req, res) => {
   });
 });
 
+// ===== PGADMIN =====
 app.get('/api/pgadmin/status', (req, res) => {
   exec('docker inspect -f "{{.State.Running}}" pgadmin_web 2>/dev/null', (err, stdout) => {
     res.json({ running: !err && stdout.trim() === 'true' });
@@ -160,11 +162,43 @@ app.post('/api/pgadmin/stop', (req, res) => {
   });
 });
 
-// Fallback: qualquer rota desconhecida → serve o index.html
+// ===== CONTROLE SEMANAL (NOVO) =====
+app.get('/api/controle-semanal/status', (req, res) => {
+  exec('docker inspect -f "{{.State.Running}}" controle-semanal 2>/dev/null', (err, stdout) => {
+    if (err) {
+      return res.json({ running: false, msg: 'Não encontrado', url: 'http://178.92.162.170:8080' });
+    }
+    res.json({ 
+      running: stdout.trim() === 'true',
+      url: 'http://178.92.162.170:8080'
+    });
+  });
+});
+
+app.post('/api/controle-semanal/start', (req, res) => {
+  exec('docker start controle-semanal', (err) => {
+    res.json({ 
+      ok: !err, 
+      msg: err ? 'Erro ao ligar Controle Semanal' : '✅ Controle Semanal LIGADO!' 
+    });
+  });
+});
+
+app.post('/api/controle-semanal/stop', (req, res) => {
+  exec('docker stop controle-semanal', (err) => {
+    res.json({ 
+      ok: !err, 
+      msg: err ? 'Erro ao desligar Controle Semanal' : '✅ Controle Semanal DESLIGADO!' 
+    });
+  });
+});
+
+// ===== FALLBACK =====
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// ===== INICIAR =====
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`🚀 Painel rodando em http://127.0.0.1:${PORT}`);
   console.log(`🔐 Login ativado — ${new Date().toLocaleString('pt-BR')}`);

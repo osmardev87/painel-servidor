@@ -14,6 +14,7 @@
       --accent-blue: #38bdf8;
       --green: #22c55e;
       --red: #ef4444;
+      --purple: #a855f7;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
     body {
@@ -22,7 +23,6 @@
       color: var(--text-main);
       min-height: 100vh;
     }
-
     /* ===== TELA DE LOGIN ===== */
     .login-tela {
       display: flex;
@@ -90,7 +90,6 @@
       font-size: 0.9rem;
       display: none;
     }
-
     /* ===== TELA PRINCIPAL ===== */
     .principal { display: none; padding: 2.5rem 1.5rem; }
     .container { max-width: 1100px; margin: 0 auto; width: 100%; }
@@ -133,24 +132,37 @@
     .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.6rem; }
     .on { background: var(--green); box-shadow: 0 0 8px var(--green); }
     .off { background: var(--red); box-shadow: 0 0 8px var(--red); }
-    .actions { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+    .actions { margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
     .btn {
       padding: 0.75rem 1.25rem; border-radius: 10px;
       font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none;
+      transition: opacity 0.2s;
     }
+    .btn:hover { opacity: 0.9; }
     .btn-liga { background: var(--green); color: white; }
     .btn-desliga { background: var(--red); color: white; }
-    .btn-link { background: #1e3a8a; color: #93c5fd; text-decoration: none; display: none; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-link { 
+      background: #1e3a8a; 
+      color: #93c5fd; 
+      text-decoration: none; 
+      display: inline-block;
+    }
+    .btn-link-purple { 
+      background: rgba(168, 85, 247, 0.2); 
+      color: #d8b4fe; 
+      text-decoration: none; 
+      display: inline-block;
+    }
     .footer {
       margin-top: 3rem; padding-top: 1.25rem;
       border-top: 1px solid var(--border-color);
       font-size: 0.8rem; color: var(--text-muted);
-      display: flex; justify-content: space-between;
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
     }
   </style>
 </head>
 <body>
-
   <!-- TELA DE LOGIN -->
   <div class="login-tela" id="telaLogin">
     <div class="login-card">
@@ -221,6 +233,22 @@
         <div class="card" style="text-align: center; color: var(--text-muted);">Carregando...</div>
       </div>
 
+      <h2>🔧 Controle Semanal</h2>
+      <div class="card" style="margin-bottom: 1rem;">
+        <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">📊 App Java — Controle Semanal</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Porta 8080 • controle-semanal</p>
+          </div>
+          <span id="cs-status" style="font-weight: 600;">Verificando...</span>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn btn-purple" id="btnCS" onclick="toggleControleSemanal()">Carregando...</button>
+        <a href="http://178.92.162.170:8080" target="_blank" class="btn btn-link-purple" id="linkCS">📊 Abrir Controle Semanal</a>
+      </div>
+
+      <h2 style="margin-top: 2.5rem;">🔐 pgAdmin</h2>
       <div class="actions">
         <button class="btn btn-liga" id="btnPgAdmin" onclick="togglePgAdmin()">Carregando...</button>
         <a href="https://admin.gomesdev87.tech" target="_blank" class="btn btn-link" id="linkPgAdmin">🐘 Abrir pgAdmin</a>
@@ -296,6 +324,44 @@
       setTimeout(checarPgAdmin, 2000);
     }
 
+    // ===== CONTROLE SEMANAL (NOVO) =====
+    async function checarControleSemanal() {
+      try {
+        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const dados = await res.json();
+        const btn = document.getElementById('btnCS');
+        const link = document.getElementById('linkCS');
+        const statusEl = document.getElementById('cs-status');
+        
+        if (dados.running) {
+          btn.textContent = '🛑 Desligar';
+          btn.className = 'btn btn-desliga';
+          link.style.display = 'inline-block';
+          statusEl.textContent = '✅ Ativo';
+          statusEl.style.color = 'var(--green)';
+        } else {
+          btn.textContent = '⚡ Ligar';
+          btn.className = 'btn btn-purple';
+          link.style.display = 'none';
+          statusEl.textContent = '⏹ Parado';
+          statusEl.style.color = 'var(--red)';
+        }
+      } catch (e) {
+        console.log('Erro ao verificar Controle Semanal:', e);
+      }
+    }
+    async function toggleControleSemanal() {
+      try {
+        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const dados = await res.json();
+        const rota = dados.running ? '/api/controle-semanal/stop' : '/api/controle-semanal/start';
+        await fetch(rota, { method: 'POST', headers: headers() });
+        setTimeout(checarControleSemanal, 2000);
+      } catch (e) {
+        alert('Erro ao executar ação');
+      }
+    }
+
     // ===== CARREGAR DADOS =====
     async function carregar() {
       if (!token) return;
@@ -336,7 +402,7 @@
           el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);">Nenhum container encontrado</div>';
         } else {
           el.innerHTML = dk.map(s => {
-            const on = s.State?.toLowerCase().includes('running');
+            const on = String(s.State).toLowerCase().includes('running');
             return `<div class="item">
               <span><span class="dot ${on ? 'on' : 'off'}"></span>${s.Name}</span>
               <span style="color:${on ? 'var(--green)' : 'var(--red)'}">${on ? '✅ Ativo' : '❌ Parado'}</span>
@@ -347,8 +413,10 @@
         document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
       }
 
+      // Atualizar status
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
+      checarControleSemanal();
     }
 
     // ===== INICIALIZAÇÃO =====
