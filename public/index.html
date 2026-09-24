@@ -664,7 +664,7 @@
       </header>
 
       <!-- BARRA SSH / INFO DO SERVIDOR -->
-      <!-- <div class="ssh-bar">
+      <div class="ssh-bar">
         <div class="ssh-info-item">
           <span>Nome de usuário SSH:</span>
           <strong>root</strong>
@@ -690,7 +690,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
-      </div> -->
+      </div>
 
       <!-- RECURSOS DO SISTEMA - CLOUD STYLE -->
       <h2>⚙️ Métricas do Sistema</h2>
@@ -799,6 +799,14 @@
   <script>
     let token = localStorage.getItem('painel_token');
 
+    // Base URL support if loaded inside blob/iframe
+    const API_BASE = window.location.protocol.startsWith('http') ? '' : '';
+
+    function apiFetch(url, options = {}) {
+      const fullUrl = API_BASE ? `${API_BASE}${url}` : url;
+      return fetch(fullUrl, options);
+    }
+
     function copiarTexto(texto) {
       const el = document.createElement('textarea');
       el.value = texto;
@@ -890,53 +898,67 @@
       const usuario = document.getElementById('usuario').value;
       const senha = document.getElementById('senha').value;
 
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ usuario, senha })
-      });
+      try {
+        const res = await apiFetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ usuario, senha })
+        });
 
-      const dados = await res.json();
+        const dados = await res.json();
 
-      if (dados.sucesso) {
-        token = dados.token;
-        localStorage.setItem('painel_token', token);
-        document.getElementById('telaLogin').style.display = 'none';
-        document.getElementById('telaPrincipal').style.display = 'block';
-        carregar();
-      } else {
+        if (dados.sucesso) {
+          token = dados.token;
+          localStorage.setItem('painel_token', token);
+          document.getElementById('telaLogin').style.display = 'none';
+          document.getElementById('telaPrincipal').style.display = 'block';
+          carregar();
+        } else {
+          document.getElementById('erroLogin').style.display = 'block';
+        }
+      } catch (err) {
+        console.error('Erro de login:', err);
+        document.getElementById('erroLogin').textContent = 'Erro de conexão com o servidor';
         document.getElementById('erroLogin').style.display = 'block';
       }
     });
 
     async function checarPgAdmin() {
-      const res = await fetch('/api/pgadmin/status', { headers: headers() });
-      const dados = await res.json();
-      const btn = document.getElementById('btnPgAdmin');
-      const link = document.getElementById('linkPgAdmin');
+      try {
+        const res = await apiFetch('/api/pgadmin/status', { headers: headers() });
+        const dados = await res.json();
+        const btn = document.getElementById('btnPgAdmin');
+        const link = document.getElementById('linkPgAdmin');
 
-      if (dados.running) {
-        btn.textContent = '🛑 Desligar pgAdmin';
-        btn.className = 'btn btn-desliga';
-        link.style.display = 'inline-flex';
-      } else {
-        btn.textContent = '⚡ Ligar pgAdmin';
-        btn.className = 'btn btn-liga';
-        link.style.display = 'none';
+        if (dados.running) {
+          btn.textContent = '🛑 Desligar pgAdmin';
+          btn.className = 'btn btn-desliga';
+          link.style.display = 'inline-flex';
+        } else {
+          btn.textContent = '⚡ Ligar pgAdmin';
+          btn.className = 'btn btn-liga';
+          link.style.display = 'none';
+        }
+      } catch (e) {
+        console.log('Erro pgAdmin:', e);
       }
     }
 
     async function togglePgAdmin() {
-      const res = await fetch('/api/pgadmin/status', { headers: headers() });
-      const dados = await res.json();
-      const rota = dados.running ? '/api/pgadmin/stop' : '/api/pgadmin/start';
-      await fetch(rota, { method: 'POST', headers: headers() });
-      setTimeout(checarPgAdmin, 2000);
+      try {
+        const res = await apiFetch('/api/pgadmin/status', { headers: headers() });
+        const dados = await res.json();
+        const rota = dados.running ? '/api/pgadmin/stop' : '/api/pgadmin/start';
+        await apiFetch(rota, { method: 'POST', headers: headers() });
+        setTimeout(checarPgAdmin, 2000);
+      } catch (e) {
+        console.log('Erro toggle pgAdmin:', e);
+      }
     }
 
     async function checarControleSemanal() {
       try {
-        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const res = await apiFetch('/api/controle-semanal/status', { headers: headers() });
         const dados = await res.json();
         const btn = document.getElementById('btnCS');
         const link = document.getElementById('linkCS');
@@ -962,10 +984,10 @@
 
     async function toggleControleSemanal() {
       try {
-        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const res = await apiFetch('/api/controle-semanal/status', { headers: headers() });
         const dados = await res.json();
         const rota = dados.running ? '/api/controle-semanal/stop' : '/api/controle-semanal/start';
-        await fetch(rota, { method: 'POST', headers: headers() });
+        await apiFetch(rota, { method: 'POST', headers: headers() });
         setTimeout(checarControleSemanal, 2000);
       } catch (e) {
         console.log('Erro ao executar ação');
@@ -976,7 +998,8 @@
       if (!token) return;
 
       try {
-        const c = await (await fetch('/api/consumo', { headers: headers() })).json();
+        const resConsumo = await apiFetch('/api/consumo', { headers: headers() });
+        const c = await resConsumo.json();
         if (c.erro) return sair();
 
         const cpuPct = parseFloat(c.cpu);
@@ -1000,16 +1023,12 @@
         const dscCircle = document.getElementById('dsc-circle');
         const offset = 125.6 - (125.6 * Math.min(dscPct, 100)) / 100;
         dscCircle.style.strokeDashoffset = offset;
-
-        if (c.tempoAtivoSistema) {
-          document.getElementById('ativo-sub').textContent = `Ativo: ${c.tempoAtivoSistema}h`;
-        }
-      } catch {
-        return sair();
+      } catch (e) {
+        console.log('Erro ao carregar consumo:', e);
       }
 
       try {
-        const pg = await (await fetch('/api/pg/geral', { headers: headers() })).json();
+        const pg = await (await apiFetch('/api/pg/geral', { headers: headers() })).json();
         document.getElementById('pgtotal').textContent = pg.total || '--';
         document.getElementById('pgcon').textContent = pg.conexoes || '--';
       } catch {
@@ -1018,7 +1037,7 @@
       }
 
       try {
-        const dk = await (await fetch('/api/docker', { headers: headers() })).json();
+        const dk = await (await apiFetch('/api/docker', { headers: headers() })).json();
         const el = document.getElementById('dock');
 
         if (!dk || dk.length === 0) {
