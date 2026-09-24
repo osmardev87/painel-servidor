@@ -95,7 +95,7 @@
     .container { max-width: 1100px; margin: 0 auto; width: 100%; }
     header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2.5rem; padding-bottom: 1.25rem;
+      margin-bottom: 2rem; padding-bottom: 1.25rem;
       border-bottom: 1px solid var(--border-color);
     }
     h1 { font-size: 1.8rem; color: var(--accent-blue); }
@@ -108,6 +108,68 @@
       margin: 2rem 0 1rem; color: var(--text-muted);
       font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1.5px;
     }
+
+    /* ✅ SEÇÃO RECURSOS DO SISTEMA — ESTILO FOTO */
+    .recursos-destaque {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+    }
+    .recursos-destaque h2 {
+      margin: 0 0 1.5rem;
+      color: var(--text-main);
+      font-size: 1.1rem;
+      text-transform: none;
+      letter-spacing: normal;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
+    }
+    .recursos-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .recursos-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+    .recurso-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .recurso-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .recurso-valor {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .recurso-barra {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+    .recurso-barra > div {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .bar-green { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+    .bar-yellow { background: #eab308; }
+    .bar-red { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+
+    /* Restante dos cards */
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
     .card {
       background: var(--bg-card); backdrop-filter: blur(12px);
@@ -190,32 +252,46 @@
         <button class="btn-sair" id="btnSair">Sair</button>
       </header>
 
-      <h2>⚙️ Recursos do Sistema</h2>
-      <div class="grid">
-        <div class="card">
-          <h3>CPU</h3>
-          <div class="val" id="cpu">--</div>
-          <div class="bar"><div id="bcpu"></div></div>
-        </div>
-        <div class="card">
-          <h3>Memória RAM</h3>
-          <div class="val" id="ram">--</div>
-          <div class="sub-val" id="ramd"></div>
-          <div class="bar"><div id="bram"></div></div>
-        </div>
-        <div class="card">
-          <h3>Disco Principal</h3>
-          <div class="val" id="dsc">--</div>
-          <div class="sub-val" id="dscd"></div>
-          <div class="bar"><div id="bdsc"></div></div>
-        </div>
-        <div class="card">
-          <h3>Tempo Ativo</h3>
-          <div class="val" id="ativo" style="font-size: 1.8rem;">--</div>
-          <div class="sub-val">Sistema Operacional</div>
+      <!-- ✅ SEÇÃO RECURSOS DO SISTEMA — ESTILO FOTO -->
+      <div class="recursos-destaque">
+        <h2>⚙️ Recursos do Sistema</h2>
+        <div class="recursos-grid">
+          <!-- CPU -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso da CPU</span>
+            <span class="recurso-valor" id="cpu">--</span>
+            <div class="recurso-barra">
+              <div id="bcpu" class="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <!-- Memória -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso de Memória</span>
+            <span class="recurso-valor" id="ram">--</span>
+            <span class="sub-val" id="ramd"></span>
+            <div class="recurso-barra">
+              <div id="bram" class="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <!-- Disco -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso do Disco</span>
+            <span class="recurso-valor" id="dsc">--</span>
+            <span class="sub-val" id="dscd"></span>
+            <div class="recurso-barra">
+              <div id="bdsc" class="bar-green" style="width: 0%"></div>
+            </div>
+          </div>
+          <!-- Tempo Ativo -->
+          <div class="recurso-item">
+            <span class="recurso-label">Tempo Ativo</span>
+            <span class="recurso-valor" id="ativo">--</span>
+            <span class="sub-val">Sistema Operacional</span>
+          </div>
         </div>
       </div>
 
+      <!-- 🐘 PostgreSQL -->
       <h2>🐘 PostgreSQL</h2>
       <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
         <div class="card">
@@ -228,26 +304,28 @@
         </div>
       </div>
 
+      <!-- 📦 Serviços Docker -->
       <h2>📦 Serviços Docker</h2>
       <div class="status-list" id="dock">
         <div class="card" style="text-align: center; color: var(--text-muted);">Carregando...</div>
       </div>
 
+      <!-- 🔧 App Controller Financeiro -->
       <h2>🔧 App Controller Financeiro</h2>
       <div class="card" style="margin-bottom: 1rem;">
-        <div class="flex justify-between items-center" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-            <h3 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">📊Control de Gastos</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted);"></p>
+            <h3 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">📊 Controle de Gastos</h3>
           </div>
           <span id="cs-status" style="font-weight: 600;">Verificando...</span>
         </div>
       </div>
       <div class="actions">
         <button class="btn btn-purple" id="btnCS" onclick="toggleControleSemanal()">Carregando...</button>
-        <a href="https://controler.gomesdev87.tech/" target="_blank" class="btn btn-link-purple" id="linkCS">📊 Control de Gastos</a>
+        <a href="https://controler.gomesdev87.tech/" target="_blank" class="btn btn-link-purple" id="linkCS">📊 Controle de Gastos</a>
       </div>
 
+      <!-- 🔐 pgAdmin -->
       <h2 style="margin-top: 2.5rem;">🔐 pgAdmin</h2>
       <div class="actions">
         <button class="btn btn-liga" id="btnPgAdmin" onclick="togglePgAdmin()">Carregando...</button>
@@ -263,10 +341,10 @@
 
   <script>
     let token = localStorage.getItem('painel_token');
-
+    
     // ===== UTILITÁRIAS =====
     function cor(p) {
-      return p > 80 ? 'red' : p > 60 ? 'yellow' : 'green';
+      return p > 80 ? 'bar-red' : p > 60 ? 'bar-yellow' : 'bar-green';
     }
     function headers() {
       return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -324,7 +402,7 @@
       setTimeout(checarPgAdmin, 2000);
     }
 
-    // ===== CONTROLE SEMANAL (NOVO) =====
+    // ===== CONTROLE SEMANAL =====
     async function checarControleSemanal() {
       try {
         const res = await fetch('/api/controle-semanal/status', { headers: headers() });
@@ -341,7 +419,7 @@
           statusEl.style.color = 'var(--green)';
         } else {
           btn.textContent = '⚡ Ligar';
-          btn.className = 'btn btn-purple';
+          btn.className = 'btn-purple';
           link.style.display = 'none';
           statusEl.textContent = '⏹ Parado';
           statusEl.style.color = 'var(--red)';
@@ -365,22 +443,30 @@
     // ===== CARREGAR DADOS =====
     async function carregar() {
       if (!token) return;
-
-      // Consumo
+      
+      // Consumo — Recursos do Sistema
       try {
         const c = await (await fetch('/api/consumo', { headers: headers() })).json();
         if (c.erro) return sair();
+        
+        // CPU
         document.getElementById('cpu').textContent = c.cpu + '%';
         document.getElementById('bcpu').style.width = c.cpu + '%';
         document.getElementById('bcpu').className = cor(parseFloat(c.cpu));
+        
+        // RAM
         document.getElementById('ram').textContent = c.ramUsada + '%';
         document.getElementById('ramd').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
         document.getElementById('bram').style.width = c.ramUsada + '%';
         document.getElementById('bram').className = cor(parseFloat(c.ramUsada));
+        
+        // Disco
         document.getElementById('dsc').textContent = c.discoUsado + '%';
         document.getElementById('dscd').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
         document.getElementById('bdsc').style.width = c.discoUsado + '%';
         document.getElementById('bdsc').className = cor(parseFloat(c.discoUsado));
+        
+        // Tempo Ativo
         document.getElementById('ativo').textContent = c.tempoAtivoSistema + 'h';
       } catch { return sair(); }
 
@@ -413,7 +499,7 @@
         document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
       }
 
-      // Atualizar status
+      // Atualizar horário
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
