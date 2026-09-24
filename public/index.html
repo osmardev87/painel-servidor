@@ -664,7 +664,7 @@
       </header>
 
       <!-- BARRA SSH / INFO DO SERVIDOR -->
-      <div class="ssh-bar">
+      <!-- <div class="ssh-bar">
         <div class="ssh-info-item">
           <span>Nome de usuário SSH:</span>
           <strong>root</strong>
@@ -690,7 +690,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
           </button>
         </div>
-      </div>
+      </div> -->
 
       <!-- RECURSOS DO SISTEMA - CLOUD STYLE -->
       <h2>⚙️ Métricas do Sistema</h2>
@@ -740,55 +740,6 @@
               <svg class="circular-svg" viewBox="0 0 50 50">
                 <circle class="circular-bg" cx="25" cy="25" r="20"></circle>
                 <circle class="circular-bar" id="dsc-circle" cx="25" cy="25" r="20"></circle>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tráfego de Entrada -->
-        <div class="metric-cloud-card">
-          <div class="metric-header">
-            <span>Tráfego de entrada <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
-          </div>
-          <div class="metric-body">
-            <div>
-              <div class="metric-value" style="font-size: 1.6rem;">1.0 MB</div>
-            </div>
-          </div>
-          <div class="sparkline-container">
-            <canvas class="sparkline-canvas" id="spark-in"></canvas>
-          </div>
-        </div>
-
-        <!-- Tráfego de Saída -->
-        <div class="metric-cloud-card">
-          <div class="metric-header">
-            <span>Tráfego de saída <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
-          </div>
-          <div class="metric-body">
-            <div>
-              <div class="metric-value" style="font-size: 1.6rem;">0.2 MB</div>
-            </div>
-          </div>
-          <div class="sparkline-container">
-            <canvas class="sparkline-canvas" id="spark-out"></canvas>
-          </div>
-        </div>
-
-        <!-- Largura de banda / Tempo Ativo -->
-        <div class="metric-cloud-card">
-          <div class="metric-header">
-            <span>Largura de banda <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
-          </div>
-          <div class="metric-body">
-            <div>
-              <div class="metric-value" style="font-size: 1.6rem;">0.004 TB</div>
-              <div class="metric-subval" id="ativo-sub">Ativo: --</div>
-            </div>
-            <div class="circular-progress">
-              <svg class="circular-svg" viewBox="0 0 50 50">
-                <circle class="circular-bg" cx="25" cy="25" r="20"></circle>
-                <circle class="circular-bar" cx="25" cy="25" r="20" style="stroke-dashoffset: 100; stroke: #3b82f6;"></circle>
               </svg>
             </div>
           </div>
@@ -922,8 +873,6 @@
 
     let cpuHistory = [15, 20, 12, 18, 25, 22, 19, 24, 21, 2];
     let ramHistory = [30, 32, 33, 31, 34, 35, 35, 36, 35, 35];
-    let inHistory = [5, 12, 8, 25, 10, 45, 15, 38, 12, 40];
-    let outHistory = [2, 4, 3, 12, 5, 25, 8, 22, 10, 18];
 
     function headers() {
       return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -1090,10 +1039,6 @@
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
-
-      // Render sparklines for traffic
-      desenharSparkline('spark-in', inHistory, '#3b82f6');
-      desenharSparkline('spark-out', outHistory, '#8b5cf6');
     }
 
     document.getElementById('btnSair').addEventListener('click', sair);
