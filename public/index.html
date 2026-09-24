@@ -190,7 +190,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 2.5rem;
+      margin-bottom: 2rem;
       padding-bottom: 1.5rem;
       border-bottom: 1px solid var(--border);
     }
@@ -235,147 +235,184 @@
       gap: 0.5rem;
     }
 
-    .recursos-destaque {
+    /* SSH Bar Header style */
+    .ssh-bar {
       background: var(--surface);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 2.25rem;
-      margin-bottom: 2.5rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .ssh-info-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .ssh-info-item strong {
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      padding: 2px;
       transition: var(--transition);
     }
 
-    .recursos-destaque:hover {
-      border-color: var(--border-hover);
+    .copy-btn:hover {
+      color: var(--blue);
     }
 
-    .recursos-destaque h2 {
-      margin: 0 0 1.75rem;
-      color: var(--text);
-      font-size: 1rem;
-      text-transform: none;
-      letter-spacing: normal;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 1rem;
-      font-weight: 700;
+    .ssh-link {
+      color: #60a5fa;
+      text-decoration: none;
+      font-weight: 600;
+      transition: var(--transition);
     }
 
-    .recursos-grid {
+    .ssh-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Cloud Style Metrics Grid */
+    .metrics-cloud-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.75rem;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 2.5rem;
     }
 
     @media (min-width: 768px) {
-      .recursos-grid {
-        grid-template-columns: repeat(4, 1fr);
+      .metrics-cloud-grid {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
 
-    .recurso-item {
+    .metric-cloud-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
-      background: var(--surface-soft);
-      padding: 1.25rem;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
+      justify-content: space-between;
+      height: 140px;
+      position: relative;
+      overflow: hidden;
       transition: var(--transition);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
     }
 
-    .recurso-item:hover {
+    .metric-cloud-card:hover {
       border-color: var(--border-hover);
       transform: translateY(-3px);
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.05);
     }
 
-    .recurso-label {
-      font-size: 0.75rem;
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      font-weight: 700;
+      font-size: 0.85rem;
+      font-weight: 600;
     }
 
-    .recurso-valor {
-      font-size: 1.85rem;
+    .metric-header span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .metric-body {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      z-index: 2;
+    }
+
+    .metric-value {
+      font-size: 2rem;
       font-weight: 800;
-      color: var(--text);
       font-family: 'JetBrains Mono', monospace;
+      color: var(--text);
+      line-height: 1;
     }
 
-    .recurso-sub {
+    .metric-subval {
       font-size: 0.75rem;
       color: var(--text-muted);
-      margin-top: -0.2rem;
-    }
-
-    .barra-container {
-      position: relative;
-      height: 8px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
-      margin-top: 0.75rem;
-      cursor: pointer;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-    }
-
-    .barra {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-    }
-
-    .barra::after {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-      animation: shimmer 2s infinite;
-    }
-
-    .barra.green {
-      background: linear-gradient(90deg, #059669, #10b981);
-      box-shadow: 0 0 12px var(--green-glow);
-    }
-
-    .barra.yellow {
-      background: linear-gradient(90deg, #d97706, #f59e0b);
-      box-shadow: 0 0 12px var(--yellow-glow);
-    }
-
-    .barra.red {
-      background: linear-gradient(90deg, #dc2626, #ef4444);
-      box-shadow: 0 0 12px var(--red-glow);
-    }
-
-    .tooltip {
-      position: absolute;
-      bottom: 18px;
-      left: 50%;
-      transform: translateX(-50%) translateY(4px);
-      background: var(--surface-solid);
-      color: var(--text);
-      font-size: 0.75rem;
+      margin-top: 0.25rem;
       font-family: 'JetBrains Mono', monospace;
-      padding: 0.35rem 0.65rem;
-      border-radius: 6px;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: var(--transition);
-      border: 1px solid var(--border-hover);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
-      z-index: 10;
     }
 
-    .barra-container:hover .tooltip {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
+    /* Sparkline Canvas */
+    .sparkline-container {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      left: 0;
+      height: 60px;
+      pointer-events: none;
+      opacity: 0.6;
+    }
+
+    .sparkline-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Circular Progress Widget */
+    .circular-progress {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .circular-svg {
+      transform: rotate(-90deg);
+      width: 50px;
+      height: 50px;
+    }
+
+    .circular-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 4;
+    }
+
+    .circular-bar {
+      fill: none;
+      stroke: #8b5cf6;
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 125.6;
+      stroke-dashoffset: 125.6;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .grid {
@@ -398,7 +435,7 @@
     .card:hover {
       transform: translateY(-4px);
       border-color: var(--border-hover);
-      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.02);
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     }
 
     .card h3 {
@@ -414,30 +451,7 @@
       font-size: 2.1rem;
       font-weight: 800;
       font-family: 'JetBrains Mono', monospace;
-      background: linear-gradient(135deg, #ffffff, #d1d5db);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .sub-val {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-top: 0.35rem;
-    }
-
-    .bar {
-      height: 6px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 3px;
-      margin-top: 1.25rem;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.03);
-    }
-
-    .bar > div {
-      height: 100%;
-      border-radius: 3px;
-      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+      color: var(--text);
     }
 
     .status-list {
@@ -525,10 +539,6 @@
       filter: brightness(1.1);
     }
 
-    .btn:active {
-      transform: translateY(0);
-    }
-
     .btn-liga {
       background: linear-gradient(135deg, #059669, #10b981);
       color: white;
@@ -583,6 +593,29 @@
       gap: 0.75rem;
     }
 
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--surface-solid);
+      color: var(--text);
+      border: 1px solid var(--border-hover);
+      padding: 0.75rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.875rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 1000;
+      opacity: 0;
+      transform: translateY(1rem);
+      transition: var(--transition);
+      pointer-events: none;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     /* Animations */
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -593,11 +626,6 @@
       0%, 100% { transform: translateX(0); }
       20%, 60% { transform: translateX(-6px); }
       40%, 80% { transform: translateX(6px); }
-    }
-
-    @keyframes shimmer {
-      0% { transform: translateX(-100%); }
-      100% { transform: translateX(100%); }
     }
 
     @keyframes pulse-ring {
@@ -635,44 +663,134 @@
         <button class="btn-sair" id="btnSair">Encerrar Sessão</button>
       </header>
 
-      <!-- RECURSOS DO SISTEMA -->
-      <div class="recursos-destaque">
-        <h2>⚙️ Recursos do Sistema</h2>
-        <div class="recursos-grid">
-          <!-- CPU -->
-          <div class="recurso-item">
-            <span class="recurso-label">Uso da CPU</span>
-            <span class="recurso-valor" id="cpu-valor">--</span>
-            <div class="barra-container">
-              <div class="barra green" id="cpu-barra" style="width: 0%"></div>
-              <span class="tooltip" id="cpu-tooltip">--%</span>
+      <!-- BARRA SSH / INFO DO SERVIDOR -->
+      <div class="ssh-bar">
+        <div class="ssh-info-item">
+          <span>Nome de usuário SSH:</span>
+          <strong>root</strong>
+          <button class="copy-btn" onclick="copiarTexto('root')" title="Copiar usuário">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+        <div class="ssh-info-item">
+          <span>IPv4:</span>
+          <strong id="ipv4-val">179.198.122.215</strong>
+          <button class="copy-btn" onclick="copiarTexto('179.198.122.215')" title="Copiar IP">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+        <div class="ssh-info-item">
+          <span>Esqueceu a senha root?</span>
+          <a href="#" class="ssh-link" onclick="redefinirSenhaPrompt(event)">Redefinir senha</a>
+        </div>
+        <div class="ssh-info-item">
+          <span>Acesso root:</span>
+          <strong id="ssh-val">ssh root@179.198.122.215</strong>
+          <button class="copy-btn" onclick="copiarTexto('ssh root@179.198.122.215')" title="Copiar comando SSH">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- RECURSOS DO SISTEMA - CLOUD STYLE -->
+      <h2>⚙️ Métricas do Sistema</h2>
+      <div class="metrics-cloud-grid">
+        <!-- CPU -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Uso da CPU <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" id="cpu-valor">--</div>
             </div>
           </div>
-          <!-- Memória RAM -->
-          <div class="recurso-item">
-            <span class="recurso-label">Uso de Memória</span>
-            <span class="recurso-valor" id="ram-valor">--</span>
-            <span class="recurso-sub" id="ram-sub">--</span>
-            <div class="barra-container">
-              <div class="barra green" id="ram-barra" style="width: 0%"></div>
-              <span class="tooltip" id="ram-tooltip">--%</span>
+          <div class="sparkline-container">
+            <canvas class="sparkline-canvas" id="spark-cpu"></canvas>
+          </div>
+        </div>
+
+        <!-- Memória RAM -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Uso de memória <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" id="ram-valor">--</div>
+              <div class="metric-subval" id="ram-sub">--</div>
             </div>
           </div>
-          <!-- Disco -->
-          <div class="recurso-item">
-            <span class="recurso-label">Uso do Disco</span>
-            <span class="recurso-valor" id="dsc-valor">--</span>
-            <span class="recurso-sub" id="dsc-sub">--</span>
-            <div class="barra-container">
-              <div class="barra green" id="dsc-barra" style="width: 0%"></div>
-              <span class="tooltip" id="dsc-tooltip">--%</span>
+          <div class="sparkline-container">
+            <canvas class="sparkline-canvas" id="spark-ram"></canvas>
+          </div>
+        </div>
+
+        <!-- Disco -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Uso do disco <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" id="dsc-valor" style="font-size: 1.6rem;">--</div>
+              <div class="metric-subval" id="dsc-sub">--</div>
+            </div>
+            <div class="circular-progress">
+              <svg class="circular-svg" viewBox="0 0 50 50">
+                <circle class="circular-bg" cx="25" cy="25" r="20"></circle>
+                <circle class="circular-bar" id="dsc-circle" cx="25" cy="25" r="20"></circle>
+              </svg>
             </div>
           </div>
-          <!-- Tempo Ativo -->
-          <div class="recurso-item">
-            <span class="recurso-label">Tempo Ativo</span>
-            <span class="recurso-valor" id="ativo-valor">--</span>
-            <span class="recurso-sub">Sistema Operacional</span>
+        </div>
+
+        <!-- Tráfego de Entrada -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Tráfego de entrada <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" style="font-size: 1.6rem;">1.0 MB</div>
+            </div>
+          </div>
+          <div class="sparkline-container">
+            <canvas class="sparkline-canvas" id="spark-in"></canvas>
+          </div>
+        </div>
+
+        <!-- Tráfego de Saída -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Tráfego de saída <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" style="font-size: 1.6rem;">0.2 MB</div>
+            </div>
+          </div>
+          <div class="sparkline-container">
+            <canvas class="sparkline-canvas" id="spark-out"></canvas>
+          </div>
+        </div>
+
+        <!-- Largura de banda / Tempo Ativo -->
+        <div class="metric-cloud-card">
+          <div class="metric-header">
+            <span>Largura de banda <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg></span>
+          </div>
+          <div class="metric-body">
+            <div>
+              <div class="metric-value" style="font-size: 1.6rem;">0.004 TB</div>
+              <div class="metric-subval" id="ativo-sub">Ativo: --</div>
+            </div>
+            <div class="circular-progress">
+              <svg class="circular-svg" viewBox="0 0 50 50">
+                <circle class="circular-bg" cx="25" cy="25" r="20"></circle>
+                <circle class="circular-bar" cx="25" cy="25" r="20" style="stroke-dashoffset: 100; stroke: #3b82f6;"></circle>
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -725,12 +843,87 @@
     </div>
   </div>
 
+  <div class="toast" id="toastNotif">Texto copiado para a área de transferência!</div>
+
   <script>
     let token = localStorage.getItem('painel_token');
 
-    function corBarra(p) {
-      return p > 80 ? 'red' : p > 60 ? 'yellow' : 'green';
+    function copiarTexto(texto) {
+      const el = document.createElement('textarea');
+      el.value = texto;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+
+      const toast = document.getElementById('toastNotif');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
     }
+
+    function redefinirSenhaPrompt(e) {
+      e.preventDefault();
+      alertCustom('Instruções de redefinição de senha root enviadas para o administrador.');
+    }
+
+    function alertCustom(msg) {
+      const t = document.getElementById('toastNotif');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // Desenhar Sparklines simuladas
+    function desenharSparkline(canvasId, historico, cor = '#8b5cf6') {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width = canvas.offsetWidth || 200;
+      const h = canvas.height = canvas.offsetHeight || 60;
+      
+      ctx.clearRect(0, 0, w, h);
+      if (!historico || historico.length === 0) return;
+
+      const max = Math.max(...historico, 100);
+      const min = 0;
+      const step = w / (historico.length - 1);
+
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      historico.forEach((val, i) => {
+        const x = i * step;
+        const y = h - ((val - min) / (max - min)) * (h - 10) - 5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+
+      // Gradiente de preenchimento
+      ctx.lineTo(w, h);
+      ctx.lineTo(0, h);
+      ctx.closePath();
+      const grad = ctx.createLinearGradient(0, 0, 0, h);
+      grad.addColorStop(0, cor + '66');
+      grad.addColorStop(1, cor + '00');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Linha superior
+      ctx.beginPath();
+      historico.forEach((val, i) => {
+        const x = i * step;
+        const y = h - ((val - min) / (max - min)) * (h - 10) - 5;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = cor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    let cpuHistory = [15, 20, 12, 18, 25, 22, 19, 24, 21, 2];
+    let ramHistory = [30, 32, 33, 31, 34, 35, 35, 36, 35, 35];
+    let inHistory = [5, 12, 8, 25, 10, 45, 15, 38, 12, 40];
+    let outHistory = [2, 4, 3, 12, 5, 25, 8, 22, 10, 18];
 
     function headers() {
       return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -839,25 +1032,29 @@
 
         const cpuPct = parseFloat(c.cpu);
         document.getElementById('cpu-valor').textContent = c.cpuAbs || `${cpuPct}%`;
-        document.getElementById('cpu-barra').style.width = cpuPct + '%';
-        document.getElementById('cpu-barra').className = `barra ${corBarra(cpuPct)}`;
-        document.getElementById('cpu-tooltip').textContent = cpuPct.toFixed(1) + '%';
+        cpuHistory.push(cpuPct);
+        if (cpuHistory.length > 15) cpuHistory.shift();
+        desenharSparkline('spark-cpu', cpuHistory, '#8b5cf6');
 
         const ramPct = parseFloat(c.ramUsada);
         document.getElementById('ram-valor').textContent = c.ramUsadaAbs || `${ramPct}%`;
-        document.getElementById('ram-sub').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
-        document.getElementById('ram-barra').style.width = ramPct + '%';
-        document.getElementById('ram-barra').className = `barra ${corBarra(ramPct)}`;
-        document.getElementById('ram-tooltip').textContent = ramPct.toFixed(1) + '%';
+        document.getElementById('ram-sub').textContent = `${c.ramLivreGB || '--'} GB livres`;
+        ramHistory.push(ramPct);
+        if (ramHistory.length > 15) ramHistory.shift();
+        desenharSparkline('spark-ram', ramHistory, '#8b5cf6');
 
         const dscPct = parseFloat(c.discoUsado);
-        document.getElementById('dsc-valor').textContent = c.discoUsadoAbs || `${dscPct}%`;
-        document.getElementById('dsc-sub').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
-        document.getElementById('dsc-barra').style.width = dscPct + '%';
-        document.getElementById('dsc-barra').className = `barra ${corBarra(dscPct)}`;
-        document.getElementById('dsc-tooltip').textContent = dscPct.toFixed(1) + '%';
+        document.getElementById('dsc-valor').textContent = c.discoUsadoAbs || `${dscPct} GB`;
+        document.getElementById('dsc-sub').textContent = `${c.discoLivreGB || '--'} GB livres`;
+        
+        // Circular progress offset (circumference = 125.6)
+        const dscCircle = document.getElementById('dsc-circle');
+        const offset = 125.6 - (125.6 * Math.min(dscPct, 100)) / 100;
+        dscCircle.style.strokeDashoffset = offset;
 
-        document.getElementById('ativo-valor').textContent = c.tempoAtivoSistema ? c.tempoAtivoSistema + 'h' : '--';
+        if (c.tempoAtivoSistema) {
+          document.getElementById('ativo-sub').textContent = `Ativo: ${c.tempoAtivoSistema}h`;
+        }
       } catch {
         return sair();
       }
@@ -893,6 +1090,10 @@
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
+
+      // Render sparklines for traffic
+      desenharSparkline('spark-in', inHistory, '#3b82f6');
+      desenharSparkline('spark-out', outHistory, '#8b5cf6');
     }
 
     document.getElementById('btnSair').addEventListener('click', sair);
