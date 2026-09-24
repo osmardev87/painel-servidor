@@ -7,153 +7,226 @@
   <style>
     :root {
       --bg-primary: #0b0f19;
-      --bg-card: rgba(30, 41, 59, 0.5);
-      --border-color: rgba(255,255,255,0.06);
+      --bg-card: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255,255,255,0.08);
       --text-main: #f8fafc;
-      --text-muted: #64748b;
+      --text-muted: #94a3b8;
       --accent-blue: #38bdf8;
       --green: #22c55e;
-      --green-soft: rgba(34, 197, 94, 0.25);
       --red: #ef4444;
       --purple: #a855f7;
+      --yellow: #eab308;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
     body {
       background: var(--bg-primary);
+      background-image: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-primary) 70%);
       color: var(--text-main);
       min-height: 100vh;
-      padding: 2rem 1.5rem;
     }
-
     /* ===== TELA DE LOGIN ===== */
     .login-tela {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 80vh; padding: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
     }
     .login-card {
-      background: var(--bg-card); backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color); border-radius: 16px;
-      padding: 2.5rem; width: 100%; max-width: 400px;
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
     }
-    .login-card h1 { text-align: center; color: var(--accent-blue); margin-bottom: 2rem; font-size: 1.4rem; }
+    .login-card h1 {
+      text-align: center;
+      color: var(--accent-blue);
+      margin-bottom: 2rem;
+      font-size: 1.5rem;
+    }
     .form-grupo { margin-bottom: 1.25rem; }
-    .form-grupo label { display: block; color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .form-grupo label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
     .form-grupo input {
-      width: 100%; padding: 0.8rem 1rem; border-radius: 8px;
-      border: 1px solid var(--border-color); background: rgba(15,23,42,0.6);
-      color: var(--text-main); font-size: 1rem; outline: none;
+      width: 100%;
+      padding: 0.875rem 1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: rgba(15,23,42,0.6);
+      color: var(--text-main);
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
     }
     .form-grupo input:focus { border-color: var(--accent-blue); }
     .btn-login {
-      width: 100%; padding: 0.8rem; border-radius: 8px; border: none;
-      background: var(--accent-blue); color: white; font-size: 1rem; font-weight: 600; cursor: pointer;
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: 10px;
+      border: none;
+      background: var(--accent-blue);
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
     }
-    .erro-login { color: var(--red); text-align: center; margin-top: 1rem; display: none; font-size: 0.9rem; }
-
+    .btn-login:hover { opacity: 0.9; }
+    .erro-login {
+      color: var(--red);
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      display: none;
+    }
     /* ===== TELA PRINCIPAL ===== */
-    .principal { display: none; max-width: 1100px; margin: 0 auto; }
+    .principal { display: none; padding: 2.5rem 1.5rem; }
+    .container { max-width: 1100px; margin: 0 auto; width: 100%; }
     header {
       display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+      margin-bottom: 2rem; padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border-color);
     }
-    h1 { font-size: 1.5rem; color: var(--accent-blue); }
+    h1 { font-size: 1.8rem; color: var(--accent-blue); }
     .btn-sair {
-      padding: 0.5rem 1rem; border-radius: 6px; border: none;
-      background: rgba(239,68,68,0.15); color: #fca5a5; cursor: pointer; font-weight: 600;
+      padding: 0.5rem 1rem; border-radius: 8px; border: none;
+      background: rgba(239,68,68,0.2); color: #fca5a5;
+      cursor: pointer; font-weight: 600;
+    }
+    h2 {
+      margin: 2rem 0 1rem; color: var(--text-muted);
+      font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1.5px;
     }
 
-    /* ✅ RECURSOS DO SISTEMA — IGUAL À FOTO */
-    .recursos-bloco {
+    /* ✅ SEÇÃO RECURSOS — VERSÃO QUE VOCÊ GOSTOU */
+    .recursos-destaque {
       background: var(--bg-card);
+      backdrop-filter: blur(12px);
       border: 1px solid var(--border-color);
-      border-radius: 16px;
-      padding: 1.75rem 2rem;
+      border-radius: 20px;
+      padding: 2rem;
       margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
     }
-    .recursos-titulo {
-      display: flex; align-items: center; gap: 0.5rem;
-      font-size: 0.95rem; color: #cbd5e1; margin-bottom: 1.5rem;
-      padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+    .recursos-destaque h2 {
+      margin: 0 0 1.5rem;
+      color: var(--text-main);
+      font-size: 1.1rem;
+      text-transform: none;
+      letter-spacing: normal;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 1rem;
     }
     .recursos-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 2rem;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.75rem;
     }
-    @media (max-width: 900px) {
-      .recursos-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    @media (min-width: 768px) {
+      .recursos-grid { grid-template-columns: repeat(4, 1fr); }
     }
-    .recurso-item { display: flex; flex-direction: column; }
+    .recurso-item { display: flex; flex-direction: column; gap: 0.5rem; }
     .recurso-label {
-      font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;
-      color: var(--text-muted); margin-bottom: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     .recurso-valor {
-      font-size: 1.5rem; font-weight: 700; color: var(--text-main);
-      margin-bottom: 0.25rem;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--text-main);
     }
     .recurso-sub {
-      font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.75rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: -0.25rem;
     }
-    .barra-wrapper {
-      position: relative; height: 4px; background: rgba(255,255,255,0.08); border-radius: 2px;
+    /* Barra com tooltip */
+    .barra-container {
+      position: relative;
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      margin-top: 0.5rem;
+      cursor: pointer;
     }
     .barra {
-      height: 100%; border-radius: 2px; transition: width 0.5s ease;
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.6s ease;
     }
-    .barra.verde { background: linear-gradient(90deg, #22c55e, #4ade80); }
-    .barra.amarela { background: #eab308; }
-    .barra.vermelha { background: #ef4444; }
-    /* Tooltip % no hover */
-    .tooltip-pct {
-      position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-      background: #1e293b; color: white; font-size: 0.7rem; padding: 0.2rem 0.4rem;
-      border-radius: 3px; opacity: 0; pointer-events: none; transition: opacity 0.15s;
+    .barra.green { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+    .barra.yellow { background: var(--yellow); }
+    .barra.red { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+    /* Tooltip — aparece só no hover */
+    .tooltip {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,23,42,0.95);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
     }
-    .barra-wrapper:hover .tooltip-pct { opacity: 1; }
+    .barra-container:hover .tooltip { opacity: 1; }
 
-    /* Seções gerais */
-    .secao { margin-bottom: 2rem; }
-    .secao-titulo {
-      font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px;
-      color: var(--text-muted); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;
+    /* Restante */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
+    .card {
+      background: var(--bg-card); backdrop-filter: blur(12px);
+      border: 1px solid var(--border-color); border-radius: 16px;
+      padding: 1.5rem; transition: transform 0.2s;
     }
-    .linha {
+    .card:hover { transform: translateY(-3px); }
+    .card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .val { font-size: 2rem; font-weight: 700; }
+    .sub-val { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .status-list { display: grid; gap: 1rem; margin-top: 0.5rem; }
+    .item {
       background: var(--bg-card); border: 1px solid var(--border-color);
       border-radius: 12px; padding: 1rem 1.25rem;
-      display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;
+      display: flex; justify-content: space-between; align-items: center;
     }
-    .linha-esq { display: flex; align-items: center; gap: 0.75rem; }
-    .ponto { width: 8px; height: 8px; border-radius: 50%; }
-    .ponto.on { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .ponto.off { background: var(--red); }
-    .status-ok { color: var(--green); font-weight: 600; font-size: 0.9rem; }
-    .status-off { color: var(--red); font-weight: 600; font-size: 0.9rem; }
-    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-    .card-pequeno {
-      background: var(--bg-card); border: 1px solid var(--border-color);
-      border-radius: 12px; padding: 1.25rem;
-    }
-    .card-pequeno .lbl { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem; }
-    .card-pequeno .vlr { font-size: 1.4rem; font-weight: 700; }
-    .botoes { display: flex; gap: 0.75rem; margin-top: 1rem; flex-wrap: wrap; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 0.6rem; }
+    .on { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .off { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .actions { margin-top: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
     .btn {
-      padding: 0.7rem 1.2rem; border-radius: 8px; border: none;
-      font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: opacity 0.2s;
+      padding: 0.75rem 1.25rem; border-radius: 10px;
+      font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none;
+      transition: opacity 0.2s;
     }
     .btn:hover { opacity: 0.9; }
-    .btn-verde { background: var(--green); color: white; }
-    .btn-vermelho { background: var(--red); color: white; }
-    .btn-roxo { background: var(--purple); color: white; }
-    .btn-link {
-      background: rgba(59, 130, 246, 0.15); color: #93c5fd; text-decoration: none;
+    .btn-liga { background: var(--green); color: white; }
+    .btn-desliga { background: var(--red); color: white; }
+    .btn-purple { background: var(--purple); color: white; }
+    .btn-link { 
+      background: #1e3a8a; color: #93c5fd; 
+      text-decoration: none; display: inline-block;
     }
-    .btn-roxo-link {
-      background: rgba(168, 85, 247, 0.15); color: #d8b4fe; text-decoration: none;
+    .btn-link-purple { 
+      background: rgba(168, 85, 247, 0.2); color: #d8b4fe; 
+      text-decoration: none; display: inline-block;
     }
-    .rodape {
-      margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border-color);
-      font-size: 0.75rem; color: var(--text-muted);
+    .footer {
+      margin-top: 3rem; padding-top: 1.25rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.8rem; color: var(--text-muted);
       display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
     }
   </style>
@@ -180,137 +253,133 @@
 
   <!-- TELA PRINCIPAL -->
   <div class="principal" id="telaPrincipal">
-    <header>
-      <h1>📊 Painel de Monitoramento</h1>
-      <button class="btn-sair" id="btnSair">Sair</button>
-    </header>
+    <div class="container">
+      <header>
+        <h1>📊 Painel de Monitoramento</h1>
+        <button class="btn-sair" id="btnSair">Sair</button>
+      </header>
 
-    <!-- ✅ RECURSOS DO SISTEMA — IGUAL À FOTO -->
-    <div class="recursos-bloco">
-      <div class="recursos-titulo">
-        <span>⚙️</span> Recursos do Sistema
-      </div>
-      <div class="recursos-grid">
-        <!-- CPU -->
-        <div class="recurso-item">
-          <span class="recurso-label">Uso da CPU</span>
-          <span class="recurso-valor" id="cpu-val">--</span>
-          <div class="barra-wrapper">
-            <div class="barra verde" id="cpu-bar" style="width: 0%"></div>
-            <span class="tooltip-pct" id="cpu-tt">--%</span>
+      <!-- ✅ RECURSOS DO SISTEMA — VERSÃO PREFERIDA -->
+      <div class="recursos-destaque">
+        <h2>⚙️ Recursos do Sistema</h2>
+        <div class="recursos-grid">
+          <!-- CPU -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso da CPU</span>
+            <span class="recurso-valor" id="cpu-valor">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="cpu-barra" style="width: 0%"></div>
+              <span class="tooltip" id="cpu-tooltip">--%</span>
+            </div>
+          </div>
+          <!-- Memória RAM -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso de Memória</span>
+            <span class="recurso-valor" id="ram-valor">--</span>
+            <span class="recurso-sub" id="ram-sub">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="ram-barra" style="width: 0%"></div>
+              <span class="tooltip" id="ram-tooltip">--%</span>
+            </div>
+          </div>
+          <!-- Disco -->
+          <div class="recurso-item">
+            <span class="recurso-label">Uso do Disco</span>
+            <span class="recurso-valor" id="dsc-valor">--</span>
+            <span class="recurso-sub" id="dsc-sub">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="dsc-barra" style="width: 0%"></div>
+              <span class="tooltip" id="dsc-tooltip">--%</span>
+            </div>
+          </div>
+          <!-- Tempo Ativo -->
+          <div class="recurso-item">
+            <span class="recurso-label">Tempo Ativo</span>
+            <span class="recurso-valor" id="ativo-valor">--</span>
+            <span class="recurso-sub">Sistema Operacional</span>
           </div>
         </div>
-        <!-- Memória -->
-        <div class="recurso-item">
-          <span class="recurso-label">Uso de Memória</span>
-          <span class="recurso-valor" id="ram-val">--</span>
-          <span class="recurso-sub" id="ram-sub">--</span>
-          <div class="barra-wrapper">
-            <div class="barra verde" id="ram-bar" style="width: 0%"></div>
-            <span class="tooltip-pct" id="ram-tt">--%</span>
+      </div>
+
+      <!-- 🐘 PostgreSQL -->
+      <h2>🐘 PostgreSQL</h2>
+      <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+        <div class="card">
+          <h3>Tamanho Total dos Bancos</h3>
+          <div class="val" id="pgtotal" style="font-size: 1.5rem;">--</div>
+        </div>
+        <div class="card">
+          <h3>Conexões Ativas</h3>
+          <div class="val" id="pgcon" style="font-size: 1.5rem;">--</div>
+        </div>
+      </div>
+
+      <!-- 📦 Serviços Docker -->
+      <h2>📦 Serviços Docker</h2>
+      <div class="status-list" id="dock">
+        <div class="card" style="text-align: center; color: var(--text-muted);">Carregando...</div>
+      </div>
+
+      <!-- 🔧 App Controller Financeiro -->
+      <h2>🔧 App Controller Financeiro</h2>
+      <div class="card" style="margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 style="font-size: 0.95rem; color: var(--text-main); margin-bottom: 0.25rem;">📊 Controle de Gastos</h3>
           </div>
-        </div>
-        <!-- Disco -->
-        <div class="recurso-item">
-          <span class="recurso-label">Uso do Disco</span>
-          <span class="recurso-valor" id="dsc-val">--</span>
-          <span class="recurso-sub" id="dsc-sub">--</span>
-          <div class="barra-wrapper">
-            <div class="barra verde" id="dsc-bar" style="width: 0%"></div>
-            <span class="tooltip-pct" id="dsc-tt">--%</span>
-          </div>
-        </div>
-        <!-- Tempo Ativo -->
-        <div class="recurso-item">
-          <span class="recurso-label">Tempo Ativo</span>
-          <span class="recurso-valor" id="ativo-val">--</span>
-          <span class="recurso-sub">Sistema Operacional</span>
+          <span id="cs-status" style="font-weight: 600;">Verificando...</span>
         </div>
       </div>
-    </div>
+      <div class="actions">
+        <button class="btn btn-purple" id="btnCS" onclick="toggleControleSemanal()">Carregando...</button>
+        <a href="https://controler.gomesdev87.tech/" target="_blank" class="btn btn-link-purple" id="linkCS">📊 Controle de Gastos</a>
+      </div>
 
-    <!-- 🐘 PostgreSQL -->
-    <div class="secao">
-      <div class="secao-titulo">🐘 PostgreSQL</div>
-      <div class="grid-2">
-        <div class="card-pequeno">
-          <div class="lbl">Tamanho Total dos Bancos</div>
-          <div class="vlr" id="pgtotal">--</div>
-        </div>
-        <div class="card-pequeno">
-          <div class="lbl">Conexões Ativas</div>
-          <div class="vlr" id="pgcon">--</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 📦 Serviços Docker -->
-    <div class="secao">
-      <div class="secao-titulo">📦 Serviços Docker</div>
-      <div id="dock">
-        <div class="linha" style="color:var(--text-muted);">Carregando...</div>
-      </div>
-    </div>
-
-    <!-- 🔧 App Controle de Gastos -->
-    <div class="secao">
-      <div class="secao-titulo">📊 App Controle de Gastos</div>
-      <div class="linha">
-        <div class="linha-esq">
-          <span class="ponto" id="cs-ponto"></span>
-          <span>Controle de Gastos</span>
-        </div>
-        <span class="status-ok" id="cs-status">Verificando...</span>
-      </div>
-      <div class="botoes">
-        <button class="btn btn-vermelho" id="btnCS" onclick="toggleCS()">Carregando...</button>
-        <a href="https://controler.gomesdev87.tech/" target="_blank" class="btn btn-roxo-link" id="linkCS">📊 Abrir Controle</a>
-      </div>
-    </div>
-
-    <!-- 🔐 pgAdmin -->
-    <div class="secao">
-      <div class="secao-titulo">🔐 pgAdmin</div>
-      <div class="botoes">
-        <button class="btn btn-verde" id="btnPgAdmin" onclick="togglePgAdmin()">Carregando...</button>
+      <!-- 🔐 pgAdmin -->
+      <h2 style="margin-top: 2.5rem;">🔐 pgAdmin</h2>
+      <div class="actions">
+        <button class="btn btn-liga" id="btnPgAdmin" onclick="togglePgAdmin()">Carregando...</button>
         <a href="https://admin.gomesdev87.tech" target="_blank" class="btn btn-link" id="linkPgAdmin">🐘 Abrir pgAdmin</a>
       </div>
-    </div>
 
-    <div class="rodape">
-      <span id="at">Atualizado: --</span>
-      <span>Atualização automática a cada 10s</span>
+      <div class="footer">
+        <span id="at">Atualizado: --</span>
+        <span>Atualização automática a cada 10s</span>
+      </div>
     </div>
   </div>
 
   <script>
     let token = localStorage.getItem('painel_token');
     
-    function corBarra(pct) {
-      return pct > 80 ? 'vermelha' : pct > 60 ? 'amarela' : 'verde';
+    // ===== UTILITÁRIAS =====
+    function corBarra(p) {
+      return p > 80 ? 'red' : p > 60 ? 'yellow' : 'green';
     }
     function headers() {
       return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
     }
     function sair() {
-      localStorage.removeItem('painel_token'); token = null;
+      localStorage.removeItem('painel_token');
+      token = null;
       document.getElementById('telaLogin').style.display = 'flex';
       document.getElementById('telaPrincipal').style.display = 'none';
     }
 
-    // Login
-    document.getElementById('formLogin').addEventListener('submit', async e => {
+    // ===== LOGIN =====
+    document.getElementById('formLogin').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const usuario = document.getElementById('usuario').value;
+      const senha = document.getElementById('senha').value;
       const res = await fetch('/api/login', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          usuario: document.getElementById('usuario').value,
-          senha: document.getElementById('senha').value
-        })
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha })
       });
-      const d = await res.json();
-      if (d.sucesso) {
-        token = d.token; localStorage.setItem('painel_token', token);
+      const dados = await res.json();
+      if (dados.sucesso) {
+        token = dados.token;
+        localStorage.setItem('painel_token', token);
         document.getElementById('telaLogin').style.display = 'none';
         document.getElementById('telaPrincipal').style.display = 'block';
         carregar();
@@ -319,46 +388,69 @@
       }
     });
 
-    // pgAdmin
+    // ===== PGADMIN =====
     async function checarPgAdmin() {
-      const d = await (await fetch('/api/pgadmin/status', { headers: headers() })).json();
+      const res = await fetch('/api/pgadmin/status', { headers: headers() });
+      const dados = await res.json();
       const btn = document.getElementById('btnPgAdmin');
-      document.getElementById('linkPgAdmin').style.display = d.running ? 'inline-block' : 'none';
-      btn.textContent = d.running ? '🛑 Desligar pgAdmin' : '⚡ Ligar pgAdmin';
-      btn.className = `btn ${d.running ? 'btn-vermelho' : 'btn-verde'}`;
+      const link = document.getElementById('linkPgAdmin');
+      if (dados.running) {
+        btn.textContent = '🛑 Desligar pgAdmin';
+        btn.className = 'btn btn-desliga';
+        link.style.display = 'inline-block';
+      } else {
+        btn.textContent = '⚡ Ligar pgAdmin';
+        btn.className = 'btn btn-liga';
+        link.style.display = 'none';
+      }
     }
     async function togglePgAdmin() {
-      const d = await (await fetch('/api/pgadmin/status', { headers: headers() })).json();
-      await fetch(d.running ? '/api/pgadmin/stop' : '/api/pgadmin/start', {
-        method: 'POST', headers: headers()
-      });
+      const res = await fetch('/api/pgadmin/status', { headers: headers() });
+      const dados = await res.json();
+      const rota = dados.running ? '/api/pgadmin/stop' : '/api/pgadmin/start';
+      await fetch(rota, { method: 'POST', headers: headers() });
       setTimeout(checarPgAdmin, 2000);
     }
 
-    // Controle Semanal
-    async function checarCS() {
+    // ===== CONTROLE SEMANAL =====
+    async function checarControleSemanal() {
       try {
-        const d = await (await fetch('/api/controle-semanal/status', { headers: headers() })).json();
+        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const dados = await res.json();
         const btn = document.getElementById('btnCS');
-        const ponto = document.getElementById('cs-ponto');
-        const status = document.getElementById('cs-status');
-        ponto.className = `ponto ${d.running ? 'on' : 'off'}`;
-        status.textContent = d.running ? '✅ Ativo' : '⏹ Parado';
-        status.className = d.running ? 'status-ok' : 'status-off';
-        document.getElementById('linkCS').style.display = d.running ? 'inline-block' : 'none';
-        btn.textContent = d.running ? '🛑 Desligar' : '⚡ Ligar';
-        btn.className = `btn ${d.running ? 'btn-vermelho' : 'btn-roxo'}`;
-      } catch(e) { console.log('Erro CS:', e); }
+        const link = document.getElementById('linkCS');
+        const statusEl = document.getElementById('cs-status');
+        
+        if (dados.running) {
+          btn.textContent = '🛑 Desligar';
+          btn.className = 'btn btn-desliga';
+          link.style.display = 'inline-block';
+          statusEl.textContent = '✅ Ativo';
+          statusEl.style.color = 'var(--green)';
+        } else {
+          btn.textContent = '⚡ Ligar';
+          btn.className = 'btn btn-purple';
+          link.style.display = 'none';
+          statusEl.textContent = '⏹ Parado';
+          statusEl.style.color = 'var(--red)';
+        }
+      } catch (e) {
+        console.log('Erro ao verificar Controle Semanal:', e);
+      }
     }
-    async function toggleCS() {
-      const d = await (await fetch('/api/controle-semanal/status', { headers: headers() })).json();
-      await fetch(d.running ? '/api/controle-semanal/stop' : '/api/controle-semanal/start', {
-        method: 'POST', headers: headers()
-      });
-      setTimeout(checarCS, 2000);
+    async function toggleControleSemanal() {
+      try {
+        const res = await fetch('/api/controle-semanal/status', { headers: headers() });
+        const dados = await res.json();
+        const rota = dados.running ? '/api/controle-semanal/stop' : '/api/controle-semanal/start';
+        await fetch(rota, { method: 'POST', headers: headers() });
+        setTimeout(checarControleSemanal, 2000);
+      } catch (e) {
+        alert('Erro ao executar ação');
+      }
     }
 
-    // Carregar dados principais
+    // ===== CARREGAR DADOS =====
     async function carregar() {
       if (!token) return;
       
@@ -366,31 +458,31 @@
         const c = await (await fetch('/api/consumo', { headers: headers() })).json();
         if (c.erro) return sair();
         
-        // CPU
-        const cpuP = parseFloat(c.cpu);
-        document.getElementById('cpu-val').textContent = c.cpu || cpuP.toFixed(1) + '%';
-        document.getElementById('cpu-bar').style.width = cpuP + '%';
-        document.getElementById('cpu-bar').className = `barra ${corBarra(cpuP)}`;
-        document.getElementById('cpu-tt').textContent = cpuP.toFixed(1) + '%';
+        // CPU — valor absoluto visível + % no hover
+        const cpuPct = parseFloat(c.cpu);
+        document.getElementById('cpu-valor').textContent = c.cpuAbs || `${cpuPct}%`;
+        document.getElementById('cpu-barra').style.width = cpuPct + '%';
+        document.getElementById('cpu-barra').className = `barra ${corBarra(cpuPct)}`;
+        document.getElementById('cpu-tooltip').textContent = cpuPct.toFixed(1) + '%';
         
-        // RAM
-        const ramP = parseFloat(c.ramUsada);
-        document.getElementById('ram-val').textContent = c.ramUsadaAbs || ramP.toFixed(1) + '%';
+        // RAM — valor absoluto visível + % no hover
+        const ramPct = parseFloat(c.ramUsada);
+        document.getElementById('ram-valor').textContent = c.ramUsadaAbs || `${ramPct}%`;
         document.getElementById('ram-sub').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
-        document.getElementById('ram-bar').style.width = ramP + '%';
-        document.getElementById('ram-bar').className = `barra ${corBarra(ramP)}`;
-        document.getElementById('ram-tt').textContent = ramP.toFixed(1) + '%';
+        document.getElementById('ram-barra').style.width = ramPct + '%';
+        document.getElementById('ram-barra').className = `barra ${corBarra(ramPct)}`;
+        document.getElementById('ram-tooltip').textContent = ramPct.toFixed(1) + '%';
         
-        // Disco
-        const dscP = parseFloat(c.discoUsado);
-        document.getElementById('dsc-val').textContent = c.discoUsadoAbs || dscP.toFixed(1) + '%';
+        // Disco — valor absoluto visível + % no hover
+        const dscPct = parseFloat(c.discoUsado);
+        document.getElementById('dsc-valor').textContent = c.discoUsadoAbs || `${dscPct}%`;
         document.getElementById('dsc-sub').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
-        document.getElementById('dsc-bar').style.width = dscP + '%';
-        document.getElementById('dsc-bar').className = `barra ${corBarra(dscP)}`;
-        document.getElementById('dsc-tt').textContent = dscP.toFixed(1) + '%';
+        document.getElementById('dsc-barra').style.width = dscPct + '%';
+        document.getElementById('dsc-barra').className = `barra ${corBarra(dscPct)}`;
+        document.getElementById('dsc-tooltip').textContent = dscPct.toFixed(1) + '%';
         
-        // Tempo ativo
-        document.getElementById('ativo-val').textContent = c.tempoAtivoSistema ? c.tempoAtivoSistema + 'h' : '--';
+        // Tempo Ativo
+        document.getElementById('ativo-valor').textContent = c.tempoAtivoSistema ? c.tempoAtivoSistema + 'h' : '--';
       } catch { return sair(); }
 
       // PostgreSQL
@@ -407,30 +499,27 @@
       try {
         const dk = await (await fetch('/api/docker', { headers: headers() })).json();
         const el = document.getElementById('dock');
-        if (!dk || !dk.length) {
-          el.innerHTML = '<div class="linha" style="color:var(--text-muted);">Nenhum container encontrado</div>';
+        if (!dk || dk.length === 0) {
+          el.innerHTML = '<div class="card" style="text-align:center;color:var(--text-muted);">Nenhum container encontrado</div>';
         } else {
           el.innerHTML = dk.map(s => {
             const on = String(s.State).toLowerCase().includes('running');
-            return `<div class="linha">
-              <div class="linha-esq">
-                <span class="ponto ${on ? 'on' : 'off'}"></span>
-                <span>${s.Name}</span>
-              </div>
-              <span class="${on ? 'status-ok' : 'status-off'}">${on ? '✅ Ativo' : '❌ Parado'}</span>
+            return `<div class="item">
+              <span><span class="dot ${on ? 'on' : 'off'}"></span>${s.Name}</span>
+              <span style="color:${on ? 'var(--green)' : 'var(--red)'}">${on ? '✅ Ativo' : '❌ Parado'}</span>
             </div>`;
           }).join('');
         }
       } catch {
-        document.getElementById('dock').innerHTML = '<div class="linha" style="color:var(--red);">Erro ao carregar</div>';
+        document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
       }
 
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
-      checarCS();
+      checarControleSemanal();
     }
 
-    // Inicialização
+    // ===== INICIALIZAÇÃO =====
     document.getElementById('btnSair').addEventListener('click', sair);
     if (token) {
       document.getElementById('telaLogin').style.display = 'none';
