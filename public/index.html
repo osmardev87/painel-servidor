@@ -15,6 +15,7 @@
       --green: #22c55e;
       --red: #ef4444;
       --purple: #a855f7;
+      --yellow: #eab308;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
     body {
@@ -47,9 +48,7 @@
       margin-bottom: 2rem;
       font-size: 1.5rem;
     }
-    .form-grupo {
-      margin-bottom: 1.25rem;
-    }
+    .form-grupo { margin-bottom: 1.25rem; }
     .form-grupo label {
       display: block;
       color: var(--text-muted);
@@ -67,9 +66,7 @@
       outline: none;
       transition: border-color 0.2s;
     }
-    .form-grupo input:focus {
-      border-color: var(--accent-blue);
-    }
+    .form-grupo input:focus { border-color: var(--accent-blue); }
     .btn-login {
       width: 100%;
       padding: 0.875rem;
@@ -109,7 +106,7 @@
       font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1.5px;
     }
 
-    /* ✅ SEÇÃO RECURSOS DO SISTEMA — ESTILO FOTO */
+    /* ✅ SEÇÃO RECURSOS — VALORES ABSOLUTOS + % NO HOVER */
     .recursos-destaque {
       background: var(--bg-card);
       backdrop-filter: blur(12px);
@@ -131,18 +128,12 @@
     .recursos-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
+      gap: 1.75rem;
     }
     @media (min-width: 768px) {
-      .recursos-grid {
-        grid-template-columns: repeat(4, 1fr);
-      }
+      .recursos-grid { grid-template-columns: repeat(4, 1fr); }
     }
-    .recurso-item {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
+    .recurso-item { display: flex; flex-direction: column; gap: 0.5rem; }
     .recurso-label {
       font-size: 0.8rem;
       color: var(--text-muted);
@@ -152,24 +143,49 @@
     .recurso-valor {
       font-size: 1.8rem;
       font-weight: 700;
+      color: var(--text-main);
     }
-    .recurso-barra {
+    .recurso-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: -0.25rem;
+    }
+    /* Barra com tooltip */
+    .barra-container {
+      position: relative;
       height: 8px;
       background: rgba(255,255,255,0.08);
       border-radius: 4px;
-      overflow: hidden;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
+      cursor: pointer;
     }
-    .recurso-barra > div {
+    .barra {
       height: 100%;
       border-radius: 4px;
       transition: width 0.6s ease;
     }
-    .bar-green { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
-    .bar-yellow { background: #eab308; }
-    .bar-red { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+    .barra.green { background: var(--green); box-shadow: 0 0 8px rgba(34,197,94,0.3); }
+    .barra.yellow { background: var(--yellow); }
+    .barra.red { background: var(--red); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+    /* Tooltip — aparece só no hover */
+    .tooltip {
+      position: absolute;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15,23,42,0.95);
+      color: white;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .barra-container:hover .tooltip { opacity: 1; }
 
-    /* Restante dos cards */
+    /* Restante */
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
     .card {
       background: var(--bg-card); backdrop-filter: blur(12px);
@@ -180,11 +196,6 @@
     .card h3 { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
     .val { font-size: 2rem; font-weight: 700; }
     .sub-val { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem; }
-    .bar { height: 6px; background: rgba(255,255,255,0.05); border-radius: 3px; margin-top: 1rem; overflow: hidden; }
-    .bar>div { height: 100%; border-radius: 3px; transition: width 0.6s; }
-    .green { background: var(--green); box-shadow: 0 0 10px rgba(34,197,94,0.4); }
-    .yellow { background: #eab308; }
-    .red { background: var(--red); box-shadow: 0 0 10px rgba(239,68,68,0.4); }
     .status-list { display: grid; gap: 1rem; margin-top: 0.5rem; }
     .item {
       background: var(--bg-card); border: 1px solid var(--border-color);
@@ -205,16 +216,12 @@
     .btn-desliga { background: var(--red); color: white; }
     .btn-purple { background: var(--purple); color: white; }
     .btn-link { 
-      background: #1e3a8a; 
-      color: #93c5fd; 
-      text-decoration: none; 
-      display: inline-block;
+      background: #1e3a8a; color: #93c5fd; 
+      text-decoration: none; display: inline-block;
     }
     .btn-link-purple { 
-      background: rgba(168, 85, 247, 0.2); 
-      color: #d8b4fe; 
-      text-decoration: none; 
-      display: inline-block;
+      background: rgba(168, 85, 247, 0.2); color: #d8b4fe; 
+      text-decoration: none; display: inline-block;
     }
     .footer {
       margin-top: 3rem; padding-top: 1.25rem;
@@ -252,41 +259,44 @@
         <button class="btn-sair" id="btnSair">Sair</button>
       </header>
 
-      <!-- ✅ SEÇÃO RECURSOS DO SISTEMA — ESTILO FOTO -->
+      <!-- ✅ RECURSOS DO SISTEMA — VALORES ABSOLUTOS + % NO HOVER -->
       <div class="recursos-destaque">
         <h2>⚙️ Recursos do Sistema</h2>
         <div class="recursos-grid">
           <!-- CPU -->
           <div class="recurso-item">
             <span class="recurso-label">Uso da CPU</span>
-            <span class="recurso-valor" id="cpu">--</span>
-            <div class="recurso-barra">
-              <div id="bcpu" class="bar-green" style="width: 0%"></div>
+            <span class="recurso-valor" id="cpu-valor">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="cpu-barra" style="width: 0%"></div>
+              <span class="tooltip" id="cpu-tooltip">--%</span>
             </div>
           </div>
-          <!-- Memória -->
+          <!-- Memória RAM -->
           <div class="recurso-item">
             <span class="recurso-label">Uso de Memória</span>
-            <span class="recurso-valor" id="ram">--</span>
-            <span class="sub-val" id="ramd"></span>
-            <div class="recurso-barra">
-              <div id="bram" class="bar-green" style="width: 0%"></div>
+            <span class="recurso-valor" id="ram-valor">--</span>
+            <span class="recurso-sub" id="ram-sub">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="ram-barra" style="width: 0%"></div>
+              <span class="tooltip" id="ram-tooltip">--%</span>
             </div>
           </div>
           <!-- Disco -->
           <div class="recurso-item">
             <span class="recurso-label">Uso do Disco</span>
-            <span class="recurso-valor" id="dsc">--</span>
-            <span class="sub-val" id="dscd"></span>
-            <div class="recurso-barra">
-              <div id="bdsc" class="bar-green" style="width: 0%"></div>
+            <span class="recurso-valor" id="dsc-valor">--</span>
+            <span class="recurso-sub" id="dsc-sub">--</span>
+            <div class="barra-container">
+              <div class="barra green" id="dsc-barra" style="width: 0%"></div>
+              <span class="tooltip" id="dsc-tooltip">--%</span>
             </div>
           </div>
           <!-- Tempo Ativo -->
           <div class="recurso-item">
             <span class="recurso-label">Tempo Ativo</span>
-            <span class="recurso-valor" id="ativo">--</span>
-            <span class="sub-val">Sistema Operacional</span>
+            <span class="recurso-valor" id="ativo-valor">--</span>
+            <span class="recurso-sub">Sistema Operacional</span>
           </div>
         </div>
       </div>
@@ -343,8 +353,8 @@
     let token = localStorage.getItem('painel_token');
     
     // ===== UTILITÁRIAS =====
-    function cor(p) {
-      return p > 80 ? 'bar-red' : p > 60 ? 'bar-yellow' : 'bar-green';
+    function corBarra(p) {
+      return p > 80 ? 'red' : p > 60 ? 'yellow' : 'green';
     }
     function headers() {
       return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -419,7 +429,7 @@
           statusEl.style.color = 'var(--green)';
         } else {
           btn.textContent = '⚡ Ligar';
-          btn.className = 'btn-purple';
+          btn.className = 'btn btn-purple';
           link.style.display = 'none';
           statusEl.textContent = '⏹ Parado';
           statusEl.style.color = 'var(--red)';
@@ -444,30 +454,35 @@
     async function carregar() {
       if (!token) return;
       
-      // Consumo — Recursos do Sistema
       try {
         const c = await (await fetch('/api/consumo', { headers: headers() })).json();
         if (c.erro) return sair();
         
-        // CPU
-        document.getElementById('cpu').textContent = c.cpu + '%';
-        document.getElementById('bcpu').style.width = c.cpu + '%';
-        document.getElementById('bcpu').className = cor(parseFloat(c.cpu));
+        // CPU — valor absoluto + % no hover
+        const cpuPct = parseFloat(c.cpu);
+        document.getElementById('cpu-valor').textContent = c.cpuAbs || `${cpuPct}%`;
+        document.getElementById('cpu-barra').style.width = cpuPct + '%';
+        document.getElementById('cpu-barra').className = `barra ${corBarra(cpuPct)}`;
+        document.getElementById('cpu-tooltip').textContent = cpuPct.toFixed(1) + '%';
         
-        // RAM
-        document.getElementById('ram').textContent = c.ramUsada + '%';
-        document.getElementById('ramd').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
-        document.getElementById('bram').style.width = c.ramUsada + '%';
-        document.getElementById('bram').className = cor(parseFloat(c.ramUsada));
+        // RAM — valor absoluto + % no hover
+        const ramPct = parseFloat(c.ramUsada);
+        document.getElementById('ram-valor').textContent = c.ramUsadaAbs || `${ramPct}%`;
+        document.getElementById('ram-sub').textContent = `${c.ramLivreGB} GB livres de ${c.ramTotalGB} GB`;
+        document.getElementById('ram-barra').style.width = ramPct + '%';
+        document.getElementById('ram-barra').className = `barra ${corBarra(ramPct)}`;
+        document.getElementById('ram-tooltip').textContent = ramPct.toFixed(1) + '%';
         
-        // Disco
-        document.getElementById('dsc').textContent = c.discoUsado + '%';
-        document.getElementById('dscd').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
-        document.getElementById('bdsc').style.width = c.discoUsado + '%';
-        document.getElementById('bdsc').className = cor(parseFloat(c.discoUsado));
+        // Disco — valor absoluto + % no hover
+        const dscPct = parseFloat(c.discoUsado);
+        document.getElementById('dsc-valor').textContent = c.discoUsadoAbs || `${dscPct}%`;
+        document.getElementById('dsc-sub').textContent = `${c.discoLivreGB} GB livres de ${c.discoTotalGB} GB`;
+        document.getElementById('dsc-barra').style.width = dscPct + '%';
+        document.getElementById('dsc-barra').className = `barra ${corBarra(dscPct)}`;
+        document.getElementById('dsc-tooltip').textContent = dscPct.toFixed(1) + '%';
         
         // Tempo Ativo
-        document.getElementById('ativo').textContent = c.tempoAtivoSistema + 'h';
+        document.getElementById('ativo-valor').textContent = c.tempoAtivoSistema ? c.tempoAtivoSistema + 'h' : '--';
       } catch { return sair(); }
 
       // PostgreSQL
@@ -499,7 +514,6 @@
         document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
       }
 
-      // Atualizar horário
       document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
