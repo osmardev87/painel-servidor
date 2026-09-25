@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/vendor/xterm-css/xterm.css">
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('painel_tema') === 'light' ? 'light' : 'dark'; } catch { document.documentElement.dataset.theme = 'dark'; }</script>
   <style>
     :root {
       --bg: #070a10;
@@ -37,6 +38,17 @@
       --transition: all .25s cubic-bezier(.4,0,.2,1);
     }
 
+    :root[data-theme="light"] {
+      color-scheme:light;
+      --bg:#edf2f8; --bg-2:#f7f9fc;
+      --surface:rgba(255,255,255,.88); --surface-solid:#fff;
+      --surface-soft:rgba(246,249,253,.96); --surface-hover:#edf3fb;
+      --border:rgba(30,48,75,.12); --border-hover:rgba(30,48,75,.22);
+      --text:#172338; --text-soft:#40516a; --text-muted:#66758b;
+      --blue:#2867d8; --blue-2:#1d58c2; --blue-glow:rgba(40,103,216,.18);
+      --green:#11866c; --yellow:#ad7100; --red:#c63847; --purple:#704bc4;
+    }
+
     * { margin:0; padding:0; box-sizing:border-box; font-family:'Plus Jakarta Sans',sans-serif; }
 
     html { scroll-behavior:smooth; }
@@ -51,6 +63,31 @@
       overflow-x:hidden;
       -webkit-font-smoothing:antialiased;
     }
+
+    :root[data-theme="light"] body::before { background-image:linear-gradient(rgba(42,75,120,.025) 1px, transparent 1px); }
+    :root[data-theme="light"] .login-card,
+    :root[data-theme="light"] .metric-cloud-card,
+    :root[data-theme="light"] .card { background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(247,249,253,.96)); box-shadow:0 10px 28px rgba(36,58,88,.08); }
+    :root[data-theme="light"] .form-grupo input { background:#f5f7fb; }
+    :root[data-theme="light"] .form-grupo input:focus { background:#fff; }
+    :root[data-theme="light"] .form-grupo input::placeholder { color:#8491a4; }
+    :root[data-theme="light"] .login-card h1,
+    :root[data-theme="light"] header h1 { background:linear-gradient(135deg,#18345e,#54739e); -webkit-background-clip:text; }
+    :root[data-theme="light"] h2,
+    :root[data-theme="light"] .metric-header,
+    :root[data-theme="light"] .card h3 { color:#53647c; }
+    :root[data-theme="light"] .metric-value { color:#172338; }
+    :root[data-theme="light"] .metric-subval,
+    :root[data-theme="light"] .footer { color:#66758b; }
+    :root[data-theme="light"] .item { background:rgba(246,249,253,.9); }
+    :root[data-theme="light"] .btn-terminal { color:#2459ad; }
+    :root[data-theme="light"] .btn-sair { color:#b42c3b; }
+    :root[data-theme="light"] .btn-liga { color:#087557; }
+    :root[data-theme="light"] .btn-desliga { color:#b42c3b; }
+    :root[data-theme="light"] .btn-purple,
+    :root[data-theme="light"] .btn-link-purple { color:#6540b4; }
+    :root[data-theme="light"] .btn-link { color:#2459ad; }
+    :root[data-theme="light"] .toast { background:rgba(255,255,255,.98); color:#172338; box-shadow:0 15px 35px rgba(36,58,88,.18); }
 
     body::before {
       content:"";
@@ -209,6 +246,8 @@
     }
 
     .header-actions { display:flex; align-items:center; gap:9px; }
+    .btn-theme { padding:9px 12px; border:1px solid var(--border-hover); border-radius:10px; background:var(--surface); color:var(--text-soft); cursor:pointer; font-size:.74rem; font-weight:800; transition:var(--transition); }
+    .btn-theme:hover { background:var(--surface-hover); transform:translateY(-1px); }
 
     .btn-terminal {
       padding:9px 14px;
@@ -694,7 +733,7 @@
       .login-card { padding:28px 22px; }
       header { flex-direction:column; }
       .header-actions { width:100%; }
-      .header-actions .btn-sair, .header-actions .btn-terminal { flex:1; }
+      .header-actions .btn-sair, .header-actions .btn-terminal, .header-actions .btn-theme { flex:1; }
       .metric-cloud-card { min-height:135px; }
       .actions .btn { flex:1 1 100%; }
       .footer { flex-direction:column; }
@@ -727,6 +766,7 @@
       <header>
         <h1>📊 Painel de Monitoramento</h1>
         <div class="header-actions">
+          <button type="button" class="btn-theme" id="btnTheme" aria-pressed="false">☀ Tema claro</button>
           <button type="button" class="btn-terminal" id="btnTerminal">&gt;_ Terminal</button>
           <button class="btn-sair" id="btnSair">Encerrar Sessão</button>
         </div>
@@ -1220,6 +1260,21 @@
     const rootDialog = document.getElementById('rootDialog');
     const rootButton = document.getElementById('btnRootMode');
     const modeLabel = document.getElementById('terminalModeLabel');
+    const themeButton = document.getElementById('btnTheme');
+
+    function atualizarBotaoTema() {
+      const claro = document.documentElement.dataset.theme === 'light';
+      themeButton.textContent = claro ? '☾ Tema escuro' : '☀ Tema claro';
+      themeButton.setAttribute('aria-pressed', String(claro));
+      themeButton.setAttribute('aria-label', claro ? 'Ativar tema escuro' : 'Ativar tema claro');
+    }
+    atualizarBotaoTema();
+    themeButton.addEventListener('click', () => {
+      const tema = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+      document.documentElement.dataset.theme = tema;
+      try { localStorage.setItem('painel_tema', tema); } catch {}
+      atualizarBotaoTema();
+    });
 
     function setTerminalStatus(text, connected = false) {
       status.textContent = text;
