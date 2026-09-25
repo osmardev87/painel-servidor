@@ -230,7 +230,10 @@ server.on('upgrade', (req, socket, head) => {
   const cookie = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('painel_token='));
   let session;
   try { session = cookie && jwt.verify(decodeURIComponent(cookie.slice('painel_token='.length)), JWT_SECRET); } catch {}
-  if (!session || !originPermitida(req)) {
+  const originOk = originPermitida(req);
+  if (!session) console.warn('Terminal WebSocket recusado: cookie de sessao ausente ou invalido.');
+  if (session && !originOk) console.warn('Terminal WebSocket recusado: origem nao corresponde a ORIGIN.');
+  if (!session || !originOk) {
     socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
     socket.destroy();
     return;
@@ -264,6 +267,7 @@ terminalWss.on('connection', (ws, req) => {
   }
 
   activeTerminals.add(ws);
+  console.log('Terminal WebSocket conectado.');
   const sessionTimeout = setTimeout(() => ws.close(4001, 'Sessão expirada'), Math.max(0, req.terminalSession.exp * 1000 - Date.now()));
   sessionTimeout.unref();
   const output = terminal.onData((data) => {
@@ -294,6 +298,7 @@ terminalWss.on('connection', (ws, req) => {
     }
   });
   ws.on('close', () => {
+    console.log('Terminal WebSocket desconectado.');
     clearTimeout(sessionTimeout);
     activeTerminals.delete(ws);
     output.dispose();

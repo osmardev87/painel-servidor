@@ -1263,8 +1263,19 @@
         }
       });
       socket.addEventListener('close', event => {
-        setTerminalStatus(event.code === 4001 ? 'Sessão expirada' : 'Conexão encerrada');
         socket = null;
+        if (panel.hidden) return;
+        let message = 'Conexao encerrada (codigo ' + event.code + '). Clique em Terminal para tentar novamente.';
+        if (event.code === 4001) message = 'Sessao expirada; entre novamente no painel.';
+        if (event.code === 1013) message = 'Ja existe um terminal aberto em outra aba.';
+        if (event.code === 1006) message = 'Handshake falhou: confira Nginx /terminal, ORIGIN e cookie de login.';
+        setTerminalStatus(message);
+        resizeObserver?.disconnect();
+        resizeObserver = null;
+        terminal?.dispose();
+        terminal = null;
+        fitAddon = null;
+        screen.replaceChildren();
       });
       socket.addEventListener('error', () => setTerminalStatus('Falha ao conectar'));
     }
