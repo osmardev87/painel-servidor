@@ -246,6 +246,15 @@
     .terminal-screen { height:min(58vh,560px); min-height:320px; overflow:hidden; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:#080b11; padding:8px; }
     .terminal-screen .xterm { height:100%; }
     .terminal-hint { color:var(--text-muted); font-size:.67rem; }
+    .terminal-actions { display:flex; align-items:center; gap:8px; }
+    .btn-root { padding:8px 11px; border:1px solid rgba(255,190,80,.25); border-radius:9px; background:rgba(255,190,80,.08); color:#ffd28a; cursor:pointer; font-size:.7rem; font-weight:800; }
+    .btn-root:hover { background:rgba(255,190,80,.16); }
+    .root-dialog { width:min(390px,calc(100vw - 32px)); border:1px solid var(--border); border-radius:14px; padding:20px; color:var(--text); background:#121925; box-shadow:0 24px 80px #0009; }
+    .root-dialog::backdrop { background:#05080dcc; backdrop-filter:blur(4px); }
+    .root-dialog h3 { margin:0 0 8px; font-size:1rem; }
+    .root-dialog p { margin:0 0 16px; color:var(--text-muted); font-size:.78rem; line-height:1.5; }
+    .root-dialog input { width:100%; box-sizing:border-box; padding:11px 12px; border:1px solid var(--border); border-radius:9px; background:#080b11; color:var(--text); }
+    .root-dialog footer { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; }
 
     .btn-sair {
       padding:9px 15px;
@@ -726,14 +735,28 @@
       <section class="terminal-panel" id="terminalPanel" aria-label="Terminal de manutencao" hidden>
         <div class="terminal-toolbar">
           <div>
-            <div class="terminal-title">Terminal web <small>usuario Linux sem privilegios</small></div>
+            <div class="terminal-title">Terminal web <small id="terminalModeLabel">usuario Linux sem privilegios</small></div>
             <div class="terminal-status"><span class="terminal-led" id="terminalLed"></span><span id="terminalStatus">Desconectado</span></div>
           </div>
-          <button type="button" class="btn-sair" id="btnCloseTerminal">Fechar terminal</button>
+          <div class="terminal-actions">
+            <button type="button" class="btn-root" id="btnRootMode">Elevar para root · 10 min</button>
+            <button type="button" class="btn-sair" id="btnCloseTerminal">Fechar terminal</button>
+          </div>
         </div>
         <div class="terminal-screen" id="terminalScreen"></div>
         <div class="terminal-hint">O shell encerra ao fechar o terminal, sair do painel ou expirar a sessao.</div>
       </section>
+      <dialog class="root-dialog" id="rootDialog">
+        <form id="rootForm">
+          <h3>Abrir terminal root</h3>
+          <p>Confirme sua senha do painel. O acesso root termina automaticamente em 10 minutos ou quando você voltar ao usuário limitado.</p>
+          <input id="rootPassword" type="password" autocomplete="current-password" placeholder="Senha do painel" required>
+          <footer>
+            <button type="button" class="btn-sair" id="cancelRoot">Cancelar</button>
+            <button type="submit" class="btn-root">Confirmar e abrir</button>
+          </footer>
+        </form>
+      </dialog>
 
       <!-- BARRA SSH / INFO DO SERVIDOR -->
       <!-- <div class="ssh-bar">
@@ -1193,6 +1216,10 @@
     let fitAddon = null;
     let socket = null;
     let resizeObserver = null;
+    let terminalMode = 'user';
+    const rootDialog = document.getElementById('rootDialog');
+    const rootButton = document.getElementById('btnRootMode');
+    const modeLabel = document.getElementById('terminalModeLabel');
 
     function setTerminalStatus(text, connected = false) {
       status.textContent = text;
@@ -1204,7 +1231,9 @@
     }
 
     function closeTerminal() {
-      if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, 'Terminal fechado');
+      const revokeRoot = terminalMode === 'root';
+      const previousSocket = socket;
+      if (previousSocket && previousSocket.readyState < WebSocket.CLOSING) previousSocket.close(1000, 'Terminal fechado');
       socket = null;
       resizeObserver?.disconnect();
       resizeObserver = null;
@@ -1214,6 +1243,23 @@
       screen.replaceChildren();
       panel.hidden = true;
       setTerminalStatus('Desconectado');
+      if (revokeRoot) fetch('/api/terminal/root-exit', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+      if (previousSocket && previousSocket.readyState < WebSocket.CLOSED) {
+        return Promise.race([
+          new Promise(resolve => previousSocket.addEventListener('close', resolve, { once: true })),
+          new Promise(resolve => setTimeout(resolve, 1500)),
+        ]);
+      }
+      return Promise.resolve();
+    }
+
+    async function switchToUser() {
+      await closeTerminal();
+      await fetch('/api/terminal/root-exit', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+      terminalMode = 'user';
+      modeLabel.textContent = 'usuario Linux sem privilegios';
+      rootButton.textContent = 'Elevar para root · 10 min';
+      openTerminal();
     }
 
     function openTerminal() {
@@ -1246,9 +1292,10 @@
       resizeObserver.observe(screen);
 
       const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      socket = new WebSocket(`${scheme}//${window.location.host}/terminal`);
+      const endpoint = terminalMode === 'root' ? '/terminal?mode=root' : '/terminal';
+      socket = new WebSocket(`${scheme}//${window.location.host}${endpoint}`);
       socket.addEventListener('open', () => {
-        setTerminalStatus('Conectado como usuario limitado', true);
+        setTerminalStatus(terminalMode === 'root' ? 'Conectado como root · acesso temporário' : 'Conectado como usuário limitado', true);
         fitAddon.fit();
         sendTerminalMessage({ type: 'resize', cols: terminal.cols, rows: terminal.rows });
         terminal.focus();
@@ -1266,7 +1313,13 @@
         socket = null;
         if (panel.hidden) return;
         let message = 'Conexao encerrada (codigo ' + event.code + '). Clique em Terminal para tentar novamente.';
-        if (event.code === 4001) message = 'Sessao expirada; entre novamente no painel.';
+        if (event.code === 4001 && terminalMode === 'root') {
+          fetch('/api/terminal/root-exit', { method: 'POST', credentials: 'same-origin' }).catch(() => {});
+          terminalMode = 'user';
+          modeLabel.textContent = 'usuario Linux sem privilegios';
+          rootButton.textContent = 'Elevar para root · 10 min';
+          message = 'Acesso root expirado. Clique em Terminal para voltar ao usuário limitado.';
+        } else if (event.code === 4001) message = 'Sessao expirada; entre novamente no painel.';
         if (event.code === 1013) message = 'Ja existe um terminal aberto em outra aba.';
         if (event.code === 1011) message = 'Conta terminal ou setpriv indisponivel; confira pm2 logs.';
         if (event.code === 1006) message = 'Handshake falhou: confira Nginx /terminal, ORIGIN e cookie de login.';
@@ -1283,6 +1336,37 @@
 
     document.getElementById('btnTerminal').addEventListener('click', openTerminal);
     document.getElementById('btnCloseTerminal').addEventListener('click', closeTerminal);
+    rootButton.addEventListener('click', () => {
+      if (terminalMode === 'root') { switchToUser(); return; }
+      document.getElementById('rootPassword').value = '';
+      rootDialog.showModal();
+      document.getElementById('rootPassword').focus();
+    });
+    document.getElementById('cancelRoot').addEventListener('click', () => rootDialog.close());
+    document.getElementById('rootForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const input = document.getElementById('rootPassword');
+      const submit = event.currentTarget.querySelector('[type="submit"]');
+      submit.disabled = true;
+      try {
+        const response = await fetch('/api/terminal/root-session', {
+          method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ senha: input.value }),
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.erro || 'Não foi possível habilitar o root.');
+        input.value = '';
+        rootDialog.close();
+        await closeTerminal();
+        terminalMode = 'root';
+        modeLabel.textContent = 'ROOT · temporário por 10 min';
+        rootButton.textContent = 'Voltar ao usuário limitado';
+        openTerminal();
+      } catch (error) {
+        setTerminalStatus(error.message);
+        input.select();
+      } finally { submit.disabled = false; }
+    });
     window.addEventListener('panel:logout', closeTerminal);
     window.addEventListener('beforeunload', () => socket?.close(1000, 'Página fechada'));
   </script>

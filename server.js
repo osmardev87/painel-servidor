@@ -5,6 +5,7 @@ const { execFile } = require('child_process');
 const http = require('http');
 const os = require('os');
 const fs = require('fs');
+const crypto = require('crypto');
 const pty = require('node-pty');
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
@@ -54,7 +55,8 @@ function verificarToken(req, res, next) {
     return res.status(401).json({ erro: 'Não autenticado' });
   }
   try {
-    jwt.verify(decodeURIComponent(token), JWT_SECRET);
+    const session = jwt.verify(decodeURIComponent(token), JWT_SECRET);
+    req.usuario = session.usuario;
     next();
   } catch {
     return res.status(401).json({ erro: 'Token inválido' });
@@ -95,7 +97,10 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/logout', (req, res) => {
   const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-  res.setHeader('Set-Cookie', `painel_token=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`);
+  res.setHeader('Set-Cookie', [
+    `painel_token=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0${secure}`,
+    `terminal_root=; HttpOnly; SameSite=Strict; Path=/terminal; Max-Age=0${secure}`,
+  ]);
   res.json({ sucesso: true });
 });
 
@@ -106,6 +111,43 @@ app.use('/api/pgadmin', verificarToken);
 app.use('/api/controle-semanal', verificarToken);
 
 app.get('/api/session', verificarToken, (req, res) => res.json({ autenticado: true }));
+
+const rootAttempts = new Map();
+const ROOT_WINDOW_MS = 15 * 60 * 1000;
+const MAX_ROOT_ATTEMPTS = 5;
+
+app.post('/api/terminal/root-session', verificarToken, (req, res) => {
+  if (!originPermitida(req)) return res.status(403).json({ erro: 'Origem invalida.' });
+  if (process.platform === 'win32' || process.getuid?.() !== 0) {
+    return res.status(503).json({ erro: 'Modo root indisponivel: o painel precisa estar rodando como root em Linux.' });
+  }
+  const clientIp = req.ip;
+  const now = Date.now();
+  const attempts = rootAttempts.get(clientIp);
+  if (attempts && now - attempts.startedAt < ROOT_WINDOW_MS && attempts.count >= MAX_ROOT_ATTEMPTS) {
+    return res.status(429).json({ erro: 'Muitas tentativas. Aguarde 15 minutos.' });
+  }
+  const provided = Buffer.from(String(req.body?.senha || ''));
+  const expected = Buffer.from(AUTH_PASS);
+  const passwordMatches = provided.length === expected.length && crypto.timingSafeEqual(provided, expected);
+  if (!passwordMatches) {
+    rootAttempts.set(clientIp, attempts && now - attempts.startedAt < ROOT_WINDOW_MS
+      ? { startedAt: attempts.startedAt, count: attempts.count + 1 }
+      : { startedAt: now, count: 1 });
+    return res.status(401).json({ erro: 'Senha incorreta.' });
+  }
+  rootAttempts.delete(clientIp);
+  const token = jwt.sign({ usuario: req.usuario, scope: 'root-terminal' }, JWT_SECRET, { expiresIn: '10m' });
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.setHeader('Set-Cookie', `terminal_root=${encodeURIComponent(token)}; HttpOnly; SameSite=Strict; Path=/terminal; Max-Age=600${secure}`);
+  res.json({ sucesso: true, expiraEm: 600 });
+});
+
+app.post('/api/terminal/root-exit', verificarToken, (req, res) => {
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.setHeader('Set-Cookie', `terminal_root=; HttpOnly; SameSite=Strict; Path=/terminal; Max-Age=0${secure}`);
+  res.json({ sucesso: true });
+});
 
 app.get('/api/consumo', async (req, res) => {
   try {
@@ -263,7 +305,21 @@ server.on('upgrade', (req, socket, head) => {
     socket.destroy();
     return;
   }
-  req.terminalSession = session;
+  const params = new URL(req.url, 'http://localhost').searchParams;
+  req.terminalMode = params.get('mode') === 'root' ? 'root' : 'user';
+  if (req.terminalMode === 'root') {
+    const rootCookie = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('terminal_root='));
+    let rootSession;
+    try { rootSession = rootCookie && jwt.verify(decodeURIComponent(rootCookie.slice('terminal_root='.length)), JWT_SECRET); } catch {}
+    if (!rootSession || rootSession.scope !== 'root-terminal' || rootSession.usuario !== session.usuario || process.platform === 'win32' || process.getuid?.() !== 0) {
+      socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
+      socket.destroy();
+      return;
+    }
+    req.terminalSession = { usuario: session.usuario, exp: Math.min(session.exp, rootSession.exp) };
+  } else {
+    req.terminalSession = session;
+  }
   terminalWss.handleUpgrade(req, socket, head, (ws) => terminalWss.emit('connection', ws, req));
 });
 
@@ -280,7 +336,17 @@ terminalWss.on('connection', (ws, req) => {
     let args;
     let cwd;
     let terminalEnv;
-    if (windows) {
+    if (req.terminalMode === 'root') {
+      command = '/bin/bash';
+      args = ['--login'];
+      cwd = '/root';
+      terminalEnv = {
+        HOME: '/root', USER: 'root', LOGNAME: 'root', SHELL: '/bin/bash',
+        PATH: '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+        LANG: process.env.LANG || 'C.UTF-8', TERM: 'xterm-256color', COLORTERM: 'truecolor',
+      };
+      console.warn(`Terminal root temporario aberto para ${req.terminalSession.usuario || 'usuario autenticado'}.`);
+    } else if (windows) {
       command = process.env.TERMINAL_SHELL || 'powershell.exe';
       args = ['-NoLogo'];
       cwd = process.env.USERPROFILE || os.homedir();
@@ -327,7 +393,7 @@ terminalWss.on('connection', (ws, req) => {
   }
 
   activeTerminals.add(ws);
-  console.log('Terminal WebSocket conectado.');
+  console.log(`Terminal WebSocket conectado em modo ${req.terminalMode}.`);
   const sessionTimeout = setTimeout(() => ws.close(4001, 'Sessão expirada'), Math.max(0, req.terminalSession.exp * 1000 - Date.now()));
   sessionTimeout.unref();
   const output = terminal.onData((data) => {
