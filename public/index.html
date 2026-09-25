@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/vendor/xterm-css/xterm.css">
   <style>
     :root {
       --bg: #070a10;
@@ -206,6 +207,45 @@
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
     }
+
+    .header-actions { display:flex; align-items:center; gap:9px; }
+
+    .btn-terminal {
+      padding:9px 14px;
+      border:1px solid rgba(79,140,255,.25);
+      border-radius:10px;
+      background:rgba(79,140,255,.09);
+      color:#a9c8ff;
+      cursor:pointer;
+      font-size:.76rem;
+      font-weight:800;
+      transition:var(--transition);
+    }
+
+    .btn-terminal:hover { background:rgba(79,140,255,.17); transform:translateY(-1px); }
+
+    .terminal-panel {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin:0 0 24px;
+      padding:16px;
+      border:1px solid var(--border);
+      border-radius:var(--radius-md);
+      background:linear-gradient(145deg,rgba(20,27,39,.96),rgba(8,12,19,.98));
+      box-shadow:0 20px 48px rgba(0,0,0,.34);
+    }
+
+    .terminal-panel[hidden] { display:none; }
+    .terminal-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .terminal-title { display:flex; align-items:center; gap:9px; color:var(--text); font-size:.85rem; font-weight:800; }
+    .terminal-title small { color:var(--text-muted); font-size:.68rem; font-weight:600; }
+    .terminal-status { display:flex; align-items:center; gap:7px; color:var(--text-muted); font-size:.7rem; }
+    .terminal-led { width:7px; height:7px; border-radius:50%; background:var(--yellow); }
+    .terminal-led.connected { background:var(--green); box-shadow:0 0 8px var(--green); }
+    .terminal-screen { height:min(58vh,560px); min-height:320px; overflow:hidden; border:1px solid rgba(255,255,255,.08); border-radius:10px; background:#080b11; padding:8px; }
+    .terminal-screen .xterm { height:100%; }
+    .terminal-hint { color:var(--text-muted); font-size:.67rem; }
 
     .btn-sair {
       padding:9px 15px;
@@ -644,7 +684,8 @@
     @media (max-width: 520px) {
       .login-card { padding:28px 22px; }
       header { flex-direction:column; }
-      .btn-sair { width:100%; }
+      .header-actions { width:100%; }
+      .header-actions .btn-sair, .header-actions .btn-terminal { flex:1; }
       .metric-cloud-card { min-height:135px; }
       .actions .btn { flex:1 1 100%; }
       .footer { flex-direction:column; }
@@ -676,8 +717,23 @@
     <div class="container">
       <header>
         <h1>📊 Painel de Monitoramento</h1>
-        <button class="btn-sair" id="btnSair">Encerrar Sessão</button>
+        <div class="header-actions">
+          <button type="button" class="btn-terminal" id="btnTerminal">&gt;_ Terminal</button>
+          <button class="btn-sair" id="btnSair">Encerrar Sessão</button>
+        </div>
       </header>
+
+      <section class="terminal-panel" id="terminalPanel" aria-label="Terminal root" hidden>
+        <div class="terminal-toolbar">
+          <div>
+            <div class="terminal-title">Terminal web <small>sessao root da VPS</small></div>
+            <div class="terminal-status"><span class="terminal-led" id="terminalLed"></span><span id="terminalStatus">Desconectado</span></div>
+          </div>
+          <button type="button" class="btn-sair" id="btnCloseTerminal">Fechar terminal</button>
+        </div>
+        <div class="terminal-screen" id="terminalScreen"></div>
+        <div class="terminal-hint">O shell encerra ao fechar o terminal, sair do painel ou expirar a sessao.</div>
+      </section>
 
       <!-- BARRA SSH / INFO DO SERVIDOR -->
       <!-- <div class="ssh-bar">
@@ -910,6 +966,7 @@
     }
 
     async function sair(encerrarNoServidor = true) {
+      window.dispatchEvent(new Event('panel:logout'));
       if (encerrarNoServidor) await apiFetch('/api/logout', { method: 'POST' }).catch(() => {});
       autenticado = false;
       carregando = false;
@@ -1123,6 +1180,99 @@
 
     restaurarSessao();
     setInterval(() => { if (autenticado) carregar(); }, 10000);
+  </script>
+  <script type="module">
+    import { Terminal } from '/vendor/xterm/xterm.mjs';
+    import { FitAddon } from '/vendor/xterm-fit/addon-fit.mjs';
+
+    const panel = document.getElementById('terminalPanel');
+    const screen = document.getElementById('terminalScreen');
+    const status = document.getElementById('terminalStatus');
+    const led = document.getElementById('terminalLed');
+    let terminal = null;
+    let fitAddon = null;
+    let socket = null;
+    let resizeObserver = null;
+
+    function setTerminalStatus(text, connected = false) {
+      status.textContent = text;
+      led.classList.toggle('connected', connected);
+    }
+
+    function sendTerminalMessage(message) {
+      if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
+    }
+
+    function closeTerminal() {
+      if (socket && socket.readyState < WebSocket.CLOSING) socket.close(1000, 'Terminal fechado');
+      socket = null;
+      resizeObserver?.disconnect();
+      resizeObserver = null;
+      terminal?.dispose();
+      terminal = null;
+      fitAddon = null;
+      screen.replaceChildren();
+      panel.hidden = true;
+      setTerminalStatus('Desconectado');
+    }
+
+    function openTerminal() {
+      panel.hidden = false;
+      if (terminal) {
+        requestAnimationFrame(() => { fitAddon.fit(); terminal.focus(); });
+        return;
+      }
+
+      setTerminalStatus('Conectando...');
+      terminal = new Terminal({
+        cursorBlink: true,
+        fontFamily: '"JetBrains Mono", monospace',
+        fontSize: 13,
+        convertEol: true,
+        scrollback: 5000,
+        theme: { background: '#080b11', foreground: '#e4e9f1', cursor: '#4f8cff', selectionBackground: '#263d60' },
+      });
+      fitAddon = new FitAddon();
+      terminal.loadAddon(fitAddon);
+      terminal.open(screen);
+      fitAddon.fit();
+      terminal.onData(data => sendTerminalMessage({ type: 'input', data }));
+      resizeObserver = new ResizeObserver(() => {
+        if (!panel.hidden && fitAddon) {
+          fitAddon.fit();
+          sendTerminalMessage({ type: 'resize', cols: terminal.cols, rows: terminal.rows });
+        }
+      });
+      resizeObserver.observe(screen);
+
+      const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      socket = new WebSocket(`${scheme}//${window.location.host}/terminal`);
+      socket.addEventListener('open', () => {
+        setTerminalStatus('Conectado como root', true);
+        fitAddon.fit();
+        sendTerminalMessage({ type: 'resize', cols: terminal.cols, rows: terminal.rows });
+        terminal.focus();
+      });
+      socket.addEventListener('message', event => {
+        try {
+          const message = JSON.parse(event.data);
+          if (message.type === 'output') terminal.write(message.data);
+          if (message.type === 'exit') terminal.write(`\r\n\x1b[90mShell encerrado (${message.code}).\x1b[0m\r\n`);
+        } catch {
+          terminal.write('\r\n\x1b[31mResposta inválida do servidor.\x1b[0m\r\n');
+        }
+      });
+      socket.addEventListener('close', event => {
+        setTerminalStatus(event.code === 4001 ? 'Sessão expirada' : 'Conexão encerrada');
+        socket = null;
+      });
+      socket.addEventListener('error', () => setTerminalStatus('Falha ao conectar'));
+    }
+
+    document.getElementById('btnTerminal').addEventListener('click', openTerminal);
+    document.getElementById('btnCloseTerminal').addEventListener('click', closeTerminal);
+    window.addEventListener('panel:logout', closeTerminal);
+    window.addEventListener('beforeunload', () => socket?.close(1000, 'Página fechada'));
   </script>
 </body>
 </html>

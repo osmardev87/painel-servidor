@@ -2,6 +2,10 @@ const express = require('express');
 const si = require('systeminformation');
 const { Pool } = require('pg');
 const { execFile } = require('child_process');
+const http = require('http');
+const os = require('os');
+const pty = require('node-pty');
+const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 require('dotenv').config();
@@ -18,9 +22,15 @@ if (!AUTH_USER) throw new Error('Variável PANEL_USER não definida no ambiente.
 if (!AUTH_PASS) throw new Error('Variável PANEL_PASS não definida no ambiente.');
 if (!JWT_SECRET) throw new Error('Variável JWT_SECRET não definida no ambiente.');
 if (JWT_SECRET.length < 32) throw new Error('JWT_SECRET precisa ter pelo menos 32 caracteres.');
+if (process.env.NODE_ENV === 'production' && !/^https:\/\//i.test(process.env.ORIGIN || '')) {
+  throw new Error('Defina ORIGIN com o dominio HTTPS do painel em producao.');
+}
 
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/vendor/xterm', express.static(path.join(__dirname, 'node_modules/@xterm/xterm/lib')));
+app.use('/vendor/xterm-css', express.static(path.join(__dirname, 'node_modules/@xterm/xterm/css')));
+app.use('/vendor/xterm-fit', express.static(path.join(__dirname, 'node_modules/@xterm/addon-fit/lib')));
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -194,10 +204,109 @@ app.post('/api/controle-semanal/stop', (req, res) => {
   });
 });
 
+const server = http.createServer(app);
+const terminalWss = new WebSocket.Server({ noServer: true, maxPayload: 32 * 1024, perMessageDeflate: false });
+const activeTerminals = new Set();
+
+function originPermitida(req) {
+  try {
+    const origin = new URL(req.headers.origin);
+    const expected = process.env.ORIGIN
+      ? new URL(process.env.ORIGIN)
+      : new URL(`${req.headers['x-forwarded-proto']?.split(',')[0] || 'http'}://${req.headers.host}`);
+    return origin.origin === expected.origin;
+  } catch {
+    return false;
+  }
+}
+
+server.on('upgrade', (req, socket, head) => {
+  let pathname;
+  try { pathname = new URL(req.url, 'http://localhost').pathname; } catch {}
+  if (pathname !== '/terminal') {
+    socket.destroy();
+    return;
+  }
+  const cookie = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('painel_token='));
+  let session;
+  try { session = cookie && jwt.verify(decodeURIComponent(cookie.slice('painel_token='.length)), JWT_SECRET); } catch {}
+  if (!session || !originPermitida(req)) {
+    socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
+    socket.destroy();
+    return;
+  }
+  req.terminalSession = session;
+  terminalWss.handleUpgrade(req, socket, head, (ws) => terminalWss.emit('connection', ws, req));
+});
+
+terminalWss.on('connection', (ws, req) => {
+  if (activeTerminals.size >= 1) {
+    ws.close(1013, 'Terminal já aberto');
+    return;
+  }
+
+  let terminal;
+  try {
+    const windows = process.platform === 'win32';
+    const shell = process.env.TERMINAL_SHELL || (windows ? 'powershell.exe' : '/bin/bash');
+    const args = windows ? ['-NoLogo'] : ['-l'];
+    terminal = pty.spawn(shell, args, {
+      name: 'xterm-256color',
+      cols: 100,
+      rows: 28,
+      cwd: process.env.TERMINAL_CWD || process.env.HOME || os.homedir(),
+      env: { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+    });
+  } catch (error) {
+    console.error('Falha ao iniciar terminal PTY:', error.message);
+    ws.close(1011, 'Não foi possível iniciar o terminal');
+    return;
+  }
+
+  activeTerminals.add(ws);
+  const sessionTimeout = setTimeout(() => ws.close(4001, 'Sessão expirada'), Math.max(0, req.terminalSession.exp * 1000 - Date.now()));
+  sessionTimeout.unref();
+  const output = terminal.onData((data) => {
+    if (ws.readyState !== WebSocket.OPEN) return;
+    if (ws.bufferedAmount > 1024 * 1024) {
+      ws.close(1013, 'Saída acima do limite');
+      return;
+    }
+    ws.send(JSON.stringify({ type: 'output', data }));
+  });
+  const exited = terminal.onExit(({ exitCode }) => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'exit', code: exitCode }));
+      ws.close(1000, 'Shell finalizado');
+    }
+  });
+
+  ws.on('message', (raw) => {
+    try {
+      const message = JSON.parse(raw.toString());
+      if (message.type === 'input' && typeof message.data === 'string' && message.data.length <= 16384) {
+        terminal.write(message.data);
+      } else if (message.type === 'resize' && Number.isInteger(message.cols) && Number.isInteger(message.rows)) {
+        terminal.resize(Math.max(20, Math.min(message.cols, 240)), Math.max(8, Math.min(message.rows, 80)));
+      }
+    } catch {
+      ws.close(1003, 'Mensagem inválida');
+    }
+  });
+  ws.on('close', () => {
+    clearTimeout(sessionTimeout);
+    activeTerminals.delete(ws);
+    output.dispose();
+    exited.dispose();
+    try { terminal.kill(); } catch {}
+  });
+  ws.on('error', () => ws.close());
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, '127.0.0.1', () => {
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`🚀 Painel rodando em http://127.0.0.1:${PORT}`);
 });
