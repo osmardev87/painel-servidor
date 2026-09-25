@@ -723,10 +723,10 @@
         </div>
       </header>
 
-      <section class="terminal-panel" id="terminalPanel" aria-label="Terminal root" hidden>
+      <section class="terminal-panel" id="terminalPanel" aria-label="Terminal de manutencao" hidden>
         <div class="terminal-toolbar">
           <div>
-            <div class="terminal-title">Terminal web <small>sessao root da VPS</small></div>
+            <div class="terminal-title">Terminal web <small>usuario Linux sem privilegios</small></div>
             <div class="terminal-status"><span class="terminal-led" id="terminalLed"></span><span id="terminalStatus">Desconectado</span></div>
           </div>
           <button type="button" class="btn-sair" id="btnCloseTerminal">Fechar terminal</button>
@@ -1248,7 +1248,7 @@
       const scheme = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       socket = new WebSocket(`${scheme}//${window.location.host}/terminal`);
       socket.addEventListener('open', () => {
-        setTerminalStatus('Conectado como root', true);
+        setTerminalStatus('Conectado como usuario limitado', true);
         fitAddon.fit();
         sendTerminalMessage({ type: 'resize', cols: terminal.cols, rows: terminal.rows });
         terminal.focus();
@@ -1268,6 +1268,7 @@
         let message = 'Conexao encerrada (codigo ' + event.code + '). Clique em Terminal para tentar novamente.';
         if (event.code === 4001) message = 'Sessao expirada; entre novamente no painel.';
         if (event.code === 1013) message = 'Ja existe um terminal aberto em outra aba.';
+        if (event.code === 1011) message = 'Conta terminal ou setpriv indisponivel; confira pm2 logs.';
         if (event.code === 1006) message = 'Handshake falhou: confira Nginx /terminal, ORIGIN e cookie de login.';
         setTerminalStatus(message);
         resizeObserver?.disconnect();

@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const { execFile } = require('child_process');
 const http = require('http');
 const os = require('os');
+const fs = require('fs');
 const pty = require('node-pty');
 const WebSocket = require('ws');
 const jwt = require('jsonwebtoken');
@@ -220,6 +221,30 @@ function originPermitida(req) {
   }
 }
 
+function obterUsuarioTerminal(nome) {
+  if (!/^[a-z_][a-z0-9_-]*[$]?$/i.test(nome || '')) throw new Error('TERMINAL_USER invalido.');
+  const passwd = fs.readFileSync('/etc/passwd', 'utf8');
+  const fields = passwd.split('\n').map((line) => line.split(':')).find((entry) => entry[0] === nome);
+  if (!fields) throw new Error(`A conta Linux ${nome} nao existe.`);
+  const uid = Number(fields[2]);
+  const gid = Number(fields[3]);
+  const home = fields[5];
+  if (!Number.isInteger(uid) || uid <= 0 || !Number.isInteger(gid) || !home || !fs.existsSync(home)) {
+    throw new Error(`A conta Linux ${nome} nao tem UID, GID ou home valido.`);
+  }
+  const homeOwner = fs.statSync(home).uid;
+  if (homeOwner !== uid) throw new Error(`O home ${home} nao pertence a ${nome}.`);
+  const primaryGroup = fs.readFileSync('/etc/group', 'utf8').split('\n')
+    .map((line) => line.split(':'))
+    .find((entry) => Number(entry[2]) === gid);
+  if (!primaryGroup || primaryGroup[0] !== nome || ['root', 'docker', 'sudo', 'wheel'].includes(primaryGroup[0])) {
+    throw new Error(`A conta ${nome} precisa de um grupo privado com o mesmo nome.`);
+  }
+  const setpriv = ['/usr/bin/setpriv', '/bin/setpriv'].find((candidate) => fs.existsSync(candidate));
+  if (!setpriv) throw new Error('setpriv nao encontrado; instale o pacote util-linux.');
+  return { nome, uid, gid, home, setpriv };
+}
+
 server.on('upgrade', (req, socket, head) => {
   let pathname;
   try { pathname = new URL(req.url, 'http://localhost').pathname; } catch {}
@@ -251,14 +276,49 @@ terminalWss.on('connection', (ws, req) => {
   let terminal;
   try {
     const windows = process.platform === 'win32';
-    const shell = process.env.TERMINAL_SHELL || (windows ? 'powershell.exe' : '/bin/bash');
-    const args = windows ? ['-NoLogo'] : ['-l'];
-    terminal = pty.spawn(shell, args, {
+    let command;
+    let args;
+    let cwd;
+    let terminalEnv;
+    if (windows) {
+      command = process.env.TERMINAL_SHELL || 'powershell.exe';
+      args = ['-NoLogo'];
+      cwd = process.env.USERPROFILE || os.homedir();
+      terminalEnv = { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' };
+    } else {
+      const username = process.env.TERMINAL_USER || 'painelterminal';
+      const account = obterUsuarioTerminal(username);
+      command = account.setpriv;
+      args = [
+        `--reuid=${account.uid}`,
+        `--regid=${account.gid}`,
+        '--clear-groups',
+        '--inh-caps=-all',
+        '--bounding-set=-all',
+        '--no-new-privs',
+        '--',
+        '/bin/bash',
+        '--login',
+      ];
+      cwd = account.home;
+      terminalEnv = {
+        HOME: account.home,
+        USER: account.nome,
+        LOGNAME: account.nome,
+        SHELL: '/bin/bash',
+        PATH: '/usr/local/bin:/usr/bin:/bin',
+        LANG: process.env.LANG || 'C.UTF-8',
+        TERM: 'xterm-256color',
+        COLORTERM: 'truecolor',
+      };
+      console.log(`Terminal iniciado como usuario sem privilegios: ${account.nome}.`);
+    }
+    terminal = pty.spawn(command, args, {
       name: 'xterm-256color',
       cols: 100,
       rows: 28,
-      cwd: process.env.TERMINAL_CWD || process.env.HOME || os.homedir(),
-      env: { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+      cwd,
+      env: terminalEnv,
     });
   } catch (error) {
     console.error('Falha ao iniciar terminal PTY:', error.message);
