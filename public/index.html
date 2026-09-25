@@ -535,6 +535,8 @@
       filter:brightness(1.05);
     }
 
+    .btn:disabled { opacity:.55; cursor:wait; transform:none; }
+
     .btn-liga {
       background:rgba(32,201,151,.1);
       border-color:rgba(32,201,151,.25);
@@ -811,7 +813,10 @@
   <div class="toast" id="toastNotif">Texto copiado para a área de transferência!</div>
 
   <script>
-    let token = localStorage.getItem('painel_token');
+    try { localStorage.removeItem('painel_token'); } catch (e) {}
+    let autenticado = false;
+    let carregando = false;
+    let falhaConsumo = false;
 
     // Base URL support if loaded inside blob/iframe
     const API_BASE = window.location.protocol.startsWith('http') ? '' : '';
@@ -859,7 +864,7 @@
 
       const max = Math.max(...historico, 100);
       const min = 0;
-      const step = w / (historico.length - 1);
+      const step = historico.length > 1 ? w / (historico.length - 1) : 0;
 
       ctx.beginPath();
       ctx.moveTo(0, h);
@@ -893,16 +898,21 @@
       ctx.stroke();
     }
 
-    let cpuHistory = [15, 20, 12, 18, 25, 22, 19, 24, 21, 2];
-    let ramHistory = [30, 32, 33, 31, 34, 35, 35, 36, 35, 35];
+    let cpuHistory = [];
+    let ramHistory = [];
 
     function headers() {
-      return { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
+      return { 'Content-Type': 'application/json' };
     }
 
-    function sair() {
-      localStorage.removeItem('painel_token');
-      token = null;
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+    }
+
+    async function sair(encerrarNoServidor = true) {
+      if (encerrarNoServidor) await apiFetch('/api/logout', { method: 'POST' }).catch(() => {});
+      autenticado = false;
+      carregando = false;
       document.getElementById('telaLogin').style.display = 'flex';
       document.getElementById('telaPrincipal').style.display = 'none';
     }
@@ -922,12 +932,12 @@
         const dados = await res.json();
 
         if (dados.sucesso) {
-          token = dados.token;
-          localStorage.setItem('painel_token', token);
+          autenticado = true;
           document.getElementById('telaLogin').style.display = 'none';
           document.getElementById('telaPrincipal').style.display = 'block';
           carregar();
         } else {
+          document.getElementById('erroLogin').textContent = dados.mensagem || 'Usuário ou senha incorretos';
           document.getElementById('erroLogin').style.display = 'block';
         }
       } catch (err) {
@@ -959,14 +969,21 @@
     }
 
     async function togglePgAdmin() {
+      const btn = document.getElementById('btnPgAdmin');
+      btn.disabled = true;
       try {
         const res = await apiFetch('/api/pgadmin/status', { headers: headers() });
         const dados = await res.json();
         const rota = dados.running ? '/api/pgadmin/stop' : '/api/pgadmin/start';
-        await apiFetch(rota, { method: 'POST', headers: headers() });
-        setTimeout(checarPgAdmin, 2000);
+        const action = await apiFetch(rota, { method: 'POST', headers: headers() });
+        const result = await action.json();
+        alertCustom(result.msg || (result.ok ? 'Operação concluída' : 'Não foi possível executar a operação'));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await checarPgAdmin();
       } catch (e) {
-        console.log('Erro toggle pgAdmin:', e);
+        alertCustom('Falha ao alterar o estado do pgAdmin');
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -997,24 +1014,34 @@
     }
 
     async function toggleControleSemanal() {
+      const btn = document.getElementById('btnCS');
+      btn.disabled = true;
       try {
         const res = await apiFetch('/api/controle-semanal/status', { headers: headers() });
         const dados = await res.json();
         const rota = dados.running ? '/api/controle-semanal/stop' : '/api/controle-semanal/start';
-        await apiFetch(rota, { method: 'POST', headers: headers() });
-        setTimeout(checarControleSemanal, 2000);
+        const action = await apiFetch(rota, { method: 'POST', headers: headers() });
+        const result = await action.json();
+        alertCustom(result.msg || (result.ok ? 'Operação concluída' : 'Não foi possível executar a operação'));
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await checarControleSemanal();
       } catch (e) {
-        console.log('Erro ao executar ação');
+        alertCustom('Falha ao alterar o estado do serviço');
+      } finally {
+        btn.disabled = false;
       }
     }
 
     async function carregar() {
-      if (!token) return;
+      if (!autenticado || carregando) return;
+      carregando = true;
 
       try {
         const resConsumo = await apiFetch('/api/consumo', { headers: headers() });
+        if (resConsumo.status === 401) { await sair(false); return; }
+        if (!resConsumo.ok) throw new Error('Falha ao consultar métricas');
         const c = await resConsumo.json();
-        if (c.erro) return sair();
+        if (c.erro) { await sair(false); return; }
 
         const cpuPct = parseFloat(c.cpu);
         document.getElementById('cpu-valor').textContent = c.cpuAbs || `${cpuPct}%`;
@@ -1030,14 +1057,16 @@
         desenharSparkline('spark-ram', ramHistory, '#8b5cf6');
 
         const dscPct = parseFloat(c.discoUsado);
-        document.getElementById('dsc-valor').textContent = c.discoUsadoAbs || `${dscPct} GB`;
-        document.getElementById('dsc-sub').textContent = `${c.discoLivreGB || '--'} GB livres`;
+        document.getElementById('dsc-valor').textContent = `${dscPct}%`;
+        document.getElementById('dsc-sub').textContent = `${c.discoUsadoGB || '--'} / ${c.discoTotalGB || '--'} GB | ${c.discoLivreGB || '--'} GB livres`;
         
         // Circular progress offset (circumference = 125.6)
         const dscCircle = document.getElementById('dsc-circle');
         const offset = 125.6 - (125.6 * Math.min(dscPct, 100)) / 100;
         dscCircle.style.strokeDashoffset = offset;
+        falhaConsumo = false;
       } catch (e) {
+        falhaConsumo = true;
         console.log('Erro ao carregar consumo:', e);
       }
 
@@ -1060,7 +1089,7 @@
           el.innerHTML = dk.map(s => {
             const on = String(s.State).toLowerCase().includes('running');
             return `<div class="item">
-              <span><span class="dot ${on ? 'on' : 'off'}"></span>${s.Name}</span>
+              <span><span class="dot ${on ? 'on' : 'off'}"></span>${escapeHtml(s.Name)}</span>
               <span style="color:${on ? 'var(--green)' : 'var(--red)'}; font-weight: 600;">${on ? '✅ Ativo' : '❌ Parado'}</span>
             </div>`;
           }).join('');
@@ -1069,20 +1098,31 @@
         document.getElementById('dock').innerHTML = '<div class="card" style="text-align:center;color:var(--red);">Erro ao carregar</div>';
       }
 
-      document.getElementById('at').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+      document.getElementById('at').textContent = falhaConsumo
+        ? 'Falha ao atualizar métricas'
+        : 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
+      carregando = false;
     }
 
     document.getElementById('btnSair').addEventListener('click', sair);
 
-    if (token) {
-      document.getElementById('telaLogin').style.display = 'none';
-      document.getElementById('telaPrincipal').style.display = 'block';
-      carregar();
+    async function restaurarSessao() {
+      try {
+        const res = await apiFetch('/api/session');
+        if (!res.ok) return;
+        autenticado = true;
+        document.getElementById('telaLogin').style.display = 'none';
+        document.getElementById('telaPrincipal').style.display = 'block';
+        await carregar();
+      } catch (e) {
+        console.warn('Não foi possível restaurar a sessão');
+      }
     }
 
-    setInterval(carregar, 10000);
+    restaurarSessao();
+    setInterval(() => { if (autenticado) carregar(); }, 10000);
   </script>
 </body>
 </html>
