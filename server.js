@@ -14,9 +14,10 @@ const AUTH_USER = process.env.PANEL_USER;
 const AUTH_PASS = process.env.PANEL_PASS;
 const JWT_SECRET = process.env.JWT_SECRET;
 
-if (!AUTH_USER || !AUTH_PASS || !JWT_SECRET || JWT_SECRET.length < 32) {
-  throw new Error('Configure PANEL_USER, PANEL_PASS e JWT_SECRET (com pelo menos 32 caracteres) no ambiente.');
-}
+if (!AUTH_USER) throw new Error('Variável PANEL_USER não definida no ambiente.');
+if (!AUTH_PASS) throw new Error('Variável PANEL_PASS não definida no ambiente.');
+if (!JWT_SECRET) throw new Error('Variável JWT_SECRET não definida no ambiente.');
+if (JWT_SECRET.length < 32) throw new Error('JWT_SECRET precisa ter pelo menos 32 caracteres.');
 
 app.use(express.json({ limit: '16kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
