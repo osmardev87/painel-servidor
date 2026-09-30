@@ -153,10 +153,10 @@ app.get('/api/consumo', async (req, res) => {
   try {
     const [cpu, mem, disco] = await Promise.all([si.currentLoad(), si.mem(), si.fsSize()]);
     const mainDisk = disco[0] || { used: 0, size: 0, available: 0 };
-    
+
     // ✅ CÁLCULO CORRIGIDO: mem.available = memória REALMENTE livre
     const ramUsadaPercent = ((mem.total - mem.available) / mem.total) * 100;
-    
+
     res.json({
       cpu: cpu.currentLoad?.toFixed(1) || '0.0',
       ramUsada: ramUsadaPercent.toFixed(1),
@@ -247,6 +247,39 @@ app.post('/api/controle-semanal/stop', (req, res) => {
   });
 });
 
+// ========== MTA-SERVER ==========
+app.get('/api/mta-server/status', (req, res) => {
+  execFile('docker', ['inspect', '-f', '{{.State.Running}}', 'mta-server'], { timeout: 10000 }, (err, stdout) => {
+    if (err) return res.json({
+      running: false,
+      msg: 'Não encontrado',
+      url: 'Portas: 22003/UDP + 22005/TCP'
+    });
+    res.json({
+      running: stdout.trim() === 'true',
+      url: 'Portas: 22003/UDP + 22005/TCP'
+    });
+  });
+});
+
+app.post('/api/mta-server/start', (req, res) => {
+  execFile('docker', ['start', 'mta-server'], { timeout: 30000 }, (err) => {
+    res.json({
+      ok: !err,
+      msg: err ? 'Erro ao ligar' : '✅ MTA:SA Server LIGADO!'
+    });
+  });
+});
+
+app.post('/api/mta-server/stop', (req, res) => {
+  execFile('docker', ['stop', 'mta-server'], { timeout: 30000 }, (err) => {
+    res.json({
+      ok: !err,
+      msg: err ? 'Erro ao desligar' : '✅ MTA:SA Server DESLIGADO!'
+    });
+  });
+});
+
 const server = http.createServer(app);
 const terminalWss = new WebSocket.Server({ noServer: true, maxPayload: 32 * 1024, perMessageDeflate: false });
 const activeTerminals = new Set();
@@ -289,14 +322,14 @@ function obterUsuarioTerminal(nome) {
 
 server.on('upgrade', (req, socket, head) => {
   let pathname;
-  try { pathname = new URL(req.url, 'http://localhost').pathname; } catch {}
+  try { pathname = new URL(req.url, 'http://localhost').pathname; } catch { }
   if (pathname !== '/terminal') {
     socket.destroy();
     return;
   }
   const cookie = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('painel_token='));
   let session;
-  try { session = cookie && jwt.verify(decodeURIComponent(cookie.slice('painel_token='.length)), JWT_SECRET); } catch {}
+  try { session = cookie && jwt.verify(decodeURIComponent(cookie.slice('painel_token='.length)), JWT_SECRET); } catch { }
   const originOk = originPermitida(req);
   if (!session) console.warn('Terminal WebSocket recusado: cookie de sessao ausente ou invalido.');
   if (session && !originOk) console.warn('Terminal WebSocket recusado: origem nao corresponde a ORIGIN.');
@@ -310,7 +343,7 @@ server.on('upgrade', (req, socket, head) => {
   if (req.terminalMode === 'root') {
     const rootCookie = req.headers.cookie?.split(';').map((part) => part.trim()).find((part) => part.startsWith('terminal_root='));
     let rootSession;
-    try { rootSession = rootCookie && jwt.verify(decodeURIComponent(rootCookie.slice('terminal_root='.length)), JWT_SECRET); } catch {}
+    try { rootSession = rootCookie && jwt.verify(decodeURIComponent(rootCookie.slice('terminal_root='.length)), JWT_SECRET); } catch { }
     if (!rootSession || rootSession.scope !== 'root-terminal' || rootSession.usuario !== session.usuario || process.platform === 'win32' || process.getuid?.() !== 0) {
       socket.write('HTTP/1.1 403 Forbidden\r\nConnection: close\r\n\r\n');
       socket.destroy();
@@ -429,7 +462,7 @@ terminalWss.on('connection', (ws, req) => {
     activeTerminals.delete(ws);
     output.dispose();
     exited.dispose();
-    try { terminal.kill(); } catch {}
+    try { terminal.kill(); } catch { }
   });
   ws.on('error', () => ws.close());
 });
