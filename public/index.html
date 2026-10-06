@@ -670,64 +670,7 @@
 
     .btn-link-purple:hover { background:rgba(155,124,255,.14); }
 
-    /* MTA SERVER */
-    .mta-card {
-      position:relative;
-      overflow:hidden;
-      border:1px solid rgba(32,201,151,.18);
-      background:linear-gradient(145deg,rgba(18,30,31,.88),rgba(12,20,24,.82));
-    }
-    .mta-card::after {
-      content:"";
-      position:absolute;
-      width:140px;
-      height:140px;
-      right:-70px;
-      top:-70px;
-      border-radius:50%;
-      background:rgba(32,201,151,.07);
-      filter:blur(8px);
-      pointer-events:none;
-    }
-    .mta-header {
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:15px;
-    }
-    .mta-title {
-      font-size:.95rem;
-      font-weight:800;
-      color:var(--text);
-      margin-bottom:5px;
-    }
-    .mta-subtitle {
-      color:var(--text-muted);
-      font-size:.7rem;
-    }
-    .mta-status {
-      display:inline-flex;
-      align-items:center;
-      gap:7px;
-      white-space:nowrap;
-      font-size:.72rem;
-      font-weight:800;
-    }
-    .mta-info {
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:14px;
-    }
-    .mta-badge {
-      padding:6px 9px;
-      border:1px solid var(--border);
-      border-radius:8px;
-      color:var(--text-soft);
-      background:rgba(255,255,255,.025);
-      font-family:'JetBrains Mono',monospace;
-      font-size:.66rem;
-    }
+    
 
     /* FOOTER */
     .footer {
@@ -959,31 +902,7 @@
         <div class="card" style="text-align: center; color: var(--text-muted);">Carregando...</div>
       </div>
 
-      <!-- MTA SERVER -->
-      <h2>🎮 MTA:SA Server</h2>
-      <div class="card mta-card" id="mta-card">
-        <div class="mta-header">
-          <div>
-            <div class="mta-title">MTA RPG Brasil</div>
-            <div class="mta-subtitle">Servidor Multi Theft Auto gerenciado pelo painel</div>
-          </div>
-          <span class="mta-status" id="mta-status">
-            <span class="dot off" id="mta-dot"></span>
-            <span id="mta-status-text">Verificando...</span>
-          </span>
-        </div>
-
-        <div class="mta-info">
-          <span class="mta-badge">UDP 22003</span>
-          <span class="mta-badge">TCP 22005</span>
-          <span class="mta-badge">Container: mta-server</span>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-liga" id="btnMta" onclick="toggleMtaServer()">Carregando...</button>
-          <button class="btn btn-link" type="button" onclick="copiarTexto('pg.gomesdev87.tech:22003')">📋 Copiar endereço</button>
-        </div>
-      </div>
+      
 
             <!-- CONTROLE DE GASTOS -->
       <h2>🔧 App Controller Financeiro</h2>
@@ -1152,70 +1071,6 @@
       }
     });
 
-    async function checarMtaServer() {
-      try {
-        const res = await apiFetch('/api/mta-server/status', { headers: headers() });
-        if (res.status === 401) { await sair(false); return; }
-
-        const dados = await res.json();
-        const btn = document.getElementById('btnMta');
-        const statusText = document.getElementById('mta-status-text');
-        const dot = document.getElementById('mta-dot');
-
-        if (dados.running) {
-          btn.textContent = '🛑 Desligar MTA:SA';
-          btn.className = 'btn btn-desliga';
-          statusText.textContent = '✅ Servidor ativo';
-          statusText.style.color = 'var(--green)';
-          dot.className = 'dot on';
-        } else {
-          btn.textContent = '⚡ Ligar MTA:SA';
-          btn.className = 'btn btn-liga';
-          statusText.textContent = '⏹ Servidor parado';
-          statusText.style.color = 'var(--red)';
-          dot.className = 'dot off';
-        }
-      } catch (e) {
-        console.log('Erro ao verificar MTA:SA:', e);
-        const statusText = document.getElementById('mta-status-text');
-        const dot = document.getElementById('mta-dot');
-        statusText.textContent = '⚠ Indisponível';
-        statusText.style.color = 'var(--yellow)';
-        dot.className = 'dot off';
-      }
-    }
-
-    async function toggleMtaServer() {
-      const btn = document.getElementById('btnMta');
-      btn.disabled = true;
-
-      try {
-        const res = await apiFetch('/api/mta-server/status', { headers: headers() });
-        if (res.status === 401) { await sair(false); return; }
-
-        const dados = await res.json();
-        const rota = dados.running ? '/api/mta-server/stop' : '/api/mta-server/start';
-
-        const action = await apiFetch(rota, {
-          method: 'POST',
-          headers: headers()
-        });
-
-        const result = await action.json();
-        alertCustom(result.msg || (result.ok
-          ? 'Operação do MTA:SA concluída'
-          : 'Não foi possível alterar o MTA:SA'));
-
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        await checarMtaServer();
-      } catch (e) {
-        console.error('Falha ao alterar MTA:SA:', e);
-        alertCustom('Falha ao alterar o estado do MTA:SA');
-      } finally {
-        btn.disabled = false;
-      }
-    }
-
     async function checarPgAdmin() {
       try {
         const res = await apiFetch('/api/pgadmin/status', { headers: headers() });
@@ -1372,7 +1227,7 @@
         : 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
       checarPgAdmin();
       checarControleSemanal();
-      checarMtaServer();
+      
       carregando = false;
     }
 
